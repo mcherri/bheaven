@@ -1,0 +1,337 @@
+/*
+ * Copyright 2010 Moustapha Cherri
+ * 
+ * This file is part of bheaven.
+ * 
+ * bheaven is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * bheaven is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with bheaven.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+package cherri.bheaven.bplustree;
+
+
+/**
+ *
+ */
+public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
+	private Node<K, V> children[];
+	
+	/**
+	 * @param keys
+	 * @param children
+	 * @param slots
+	 * @param parent
+	 */
+	public InnerNode(final K[] keys, final Node<K, V>[] children,
+			final int slots, final Node<K, V> parent) {
+		super(keys, slots, parent);
+		
+		checkChildrenAreValid(children);
+		this.children = children;
+	}
+
+	private void checkChildrenAreValid(final Node<K, V>[] children) {
+		if (getKeys() != null && children != null
+				&& getKeys().length + 1 != children.length) {
+			throw new IllegalArgumentException("Keys should be less that " +
+					"children by 1");
+		}
+	}
+
+	/**
+	 * @return the children
+	 */
+	public Node<K, V>[] getChildren() {
+		return children;
+	}
+
+	/**
+	 * @param children the children to set
+	 */
+	public void setChildren(final Node<K, V>[] children) {
+		checkChildrenAreValid(children);
+		this.children = children;
+	}
+	
+	public void insert(final K key, final Node<K, V> child) {
+		K[] keys = getKeys();
+		Node<K, V>[] children = getChildren();
+		
+		int index = getSlots() - 1;
+		
+		while (index >= 0 && key.compareTo(keys[index]) < 0) {
+			keys[index + 1] = keys[index];
+			children[index + 2] = children[index + 1];
+
+			index--;
+		}
+		
+		keys[index + 1] = key;
+		children[index + 2] = child;
+		
+		setSlots(getSlots() + 1);
+	}
+	
+	public InnerNode<K, V> split() {
+		checkIsFull();
+		
+		@SuppressWarnings("unchecked")
+		final K keys[] = (K[]) new Comparable[getKeys().length];
+		@SuppressWarnings("unchecked")
+		final Node<K, V> children[] = new Node[getChildren().length];
+		
+		return new InnerNode<K, V>(keys, children, 0, getParent());
+	}
+	
+	public void remove(final int index) {
+		K[] keys = getKeys();
+		Node<K, V>[] children = getChildren();
+		
+		for (int i = index; i < getSlots(); i++) {
+			if (i < getSlots() - 1) {
+				keys[i] = keys[i + 1];
+			}
+			children[i] = children[i + 1];
+		}
+		
+		setSlots(getSlots() - 1);
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#getDepth()
+	 */
+	@Override
+	public int getDepth() {
+		return getChildren()[0].getDepth() + 1;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#hasEnoughSlots()
+	 */
+	@Override
+	public boolean hasEnoughSlots() {
+		return getSlots() >= (getKeys().length - 1) / 2;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#canGive()
+	 */
+	@Override
+	public boolean canGiveSlots() {
+		return getSlots() - 1 >= (getKeys().length - 1) / 2;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#leftShift(int)
+	 */
+	@Override
+	public void leftShift(final int count) {
+		for (int i = 0; i < getSlots() - count; i++) {
+			getKeys()[i] = getKeys()[i + count]; 
+			getChildren()[i] = getChildren()[i + count]; 
+		}
+		getChildren()[getSlots() - count] = getChildren()[getSlots()];
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#rightShift(int)
+	 */
+	@Override
+	public void rightShift(final int count) {
+		for (int i = getSlots() - 1; i >= 0 ; i--) {
+			getKeys()[i + count] = getKeys()[i];
+			getChildren()[i + count + 1] = getChildren()[i + 1];
+		}
+		getChildren()[count] = getChildren()[0];
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#copyToLeft(int)
+	 */
+	@Override
+	public void copyToLeft(final Node<K,V> node, final int count) {
+		for (int i = 0; i < count; i++) {
+			if(i < getSlots()) {
+				node.getKeys()[node.getSlots() + i + 1] =
+					getKeys()[i];
+			}
+			((InnerNode<K, V>) node).getChildren()[node.getSlots() + i + 1] =
+				getChildren()[i];
+			((InnerNode<K, V>) node).getChildren()[node.getSlots() + i + 1].setParent(node);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#copyToRight(int)
+	 */
+	@Override
+	public void copyToRight(final Node<K,V> node, final int count) {
+		for (int i = 0; i < count - 1; i++) {
+			node.getKeys()[i] = 
+				getKeys()[getSlots() - count + i + 1];
+			((InnerNode<K, V>) node).getChildren()[i + 1] =
+				getChildren()[getSlots() - count + i + 2];
+			((InnerNode<K, V>) node).getChildren()[i + 1].setParent(node);
+		}
+		((InnerNode<K, V>) node).getChildren()[0] = 
+			getChildren()[getSlots() - count + 1];
+		((InnerNode<K, V>) node).getChildren()[0].setParent(node);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#toString(int)
+	 */
+	@Override
+	public String toString(final int level) {
+		final StringBuffer buffer = new StringBuffer(super.toString(level));
+		final StringBuffer indent = getIndent(level);
+		buffer.append('\n');
+		
+		if (getSlots() > 0) {
+			buffer.append(indent);
+			buffer.append(" children: \n");
+		}
+		
+		for (int i = 0; i < getSlots() + 1; i++) {
+			if(i > 0) {
+				buffer.append('\n');
+			}
+			buffer.append(children[i].toString(level + 1));
+		}
+
+		return buffer.toString();
+	}
+
+	/*
+	 * Recursively check that the given depth in the tree depth.
+	 * TODO: Elaborate.
+	 */
+	protected boolean isBalanced(final int depth) {
+		boolean result = true;
+		final Node<K, V> children[] = getChildren();
+		for (int i = 0; result && i < getSlots() + 1; i++) {
+			result = result && children[i].isBalanced(depth - 1);
+		}
+		
+		return result;
+	}
+
+	boolean isBalanced() {
+		return isBalanced(getDepth());
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#checkInternalNodesEntriesCount()
+	 */
+	@Override
+	boolean checkCount() {
+		boolean result = checkCount(getSlots() + 1, getChildren().length);
+		final Node<K, V> children[] = getChildren();
+		for (int i = 0; result && i < getSlots() + 1; i++) {
+			result = result && children[i].checkCount();
+		}
+		
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#checkRootNode()
+	 */
+	@Override
+	protected boolean checkRootNode() {
+		return getSlots() > 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#checkKeyOrder()
+	 */
+	@Override
+	boolean checkKeyOrder() {
+		boolean result = super.checkKeyOrder();
+		
+		final Node<K, V> children[] = getChildren();
+		for (int i = 0; result && i < getSlots() + 1; i++) {
+			result = result && children[i].checkKeyOrder();
+		}
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#getLeafNodes()
+	 */
+	@Override
+	Node<K, V>[] getLeafNodes() {
+		@SuppressWarnings("unchecked")
+		Node<K, V> array[][] = new Node[getSlots() + 1][];
+		
+		for (int i = 0; i < getSlots() + 1; i++) {
+			array[i] = children[i].getLeafNodes();
+		}
+		return merge(array);
+	}
+	
+	private Node<K, V>[] merge(final Node<K, V> array[][]) {
+		int length = 0;
+		
+		// Find the length.
+		for (int i = 0; i < array.length; i++) {
+			length += array[i].length;
+		}
+		
+		@SuppressWarnings("unchecked")
+		final Node<K, V> nodes[] = new Node[length];
+		
+		int pos = 0;
+		for (int i = 0; i < array.length; i++) {
+			System.arraycopy(array[i], 0, nodes, pos, array[i].length);
+			pos += array[i].length;
+		}
+		
+		return nodes;
+	}
+	
+	K getLastKey() {
+		return getChildren()[getSlots()].getLastKey();
+	}
+	
+	/*
+	 * Self check used in unit testing.
+	 */
+	boolean checkLastKey() {
+		boolean result = true;
+		
+		final K keys[] = getKeys();
+		for (int i = 0; result && i < getSlots(); i++) {
+			result = result && keys[i].compareTo(getChildren()[i].getLastKey()) >= 0;
+		}
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.cherri.bplustree.Node#checkParent(com.cherri.bplustree.Node)
+	 */
+	@Override
+	boolean checkParent(final Node<K, V> parent) {
+		boolean result = super.checkParent(parent);
+		
+		final Node<K, V> children[] = getChildren();
+		for (int i = 0; result && i < getSlots() + 1; i++) {
+			result = result && children[i].checkParent(this);
+		}
+		return result;
+	}
+
+}
