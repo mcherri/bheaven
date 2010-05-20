@@ -27,17 +27,15 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 
 	private K keys[];
 	private int slots;
-	private Node<K, V> parent;
 
 	/**
 	 * @param keys
 	 * @param slots
 	 * @param parent
 	 */
-	public Node(final K[] keys, final int slots, final Node<K, V> parent) {
+	public Node(K[] keys, int slots) {
 		this.keys = keys;
 		this.slots = slots;
-		this.parent = parent;
 	}
 
 	/**
@@ -50,7 +48,7 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 	/**
 	 * @param keys the keys to set
 	 */
-	public void setKeys(final K[] keys) {
+	public void setKeys(K[] keys) {
 		this.keys = keys;
 	}
 
@@ -64,24 +62,10 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 	/**
 	 * @param slots the slots to set
 	 */
-	public void setSlots(final int slots) {
+	public void setSlots(int slots) {
 		this.slots = slots;
 	}
 
-	/**
-	 * @return the parent
-	 */
-	public Node<K, V> getParent() {
-		return parent;
-	}
-
-	/**
-	 * @param parent the parent to set
-	 */
-	public void setParent(final Node<K, V> parent) {
-		this.parent = parent;
-	}
-	
 	public boolean isEmpty() {
 		return getSlots() == 0;
 	}
@@ -123,9 +107,9 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 		return toString(0);
 	}
 
-	public String toString(final int level) {
-		final StringBuffer buffer = new StringBuffer();
-		final StringBuffer indent = getIndent(level);
+	public String toString(int level) {
+		StringBuffer buffer = new StringBuffer();
+		StringBuffer indent = getIndent(level);
 		buffer.append(indent);
 		buffer.append(getClass().getName());
 		buffer.append('@');
@@ -149,8 +133,8 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 		return buffer.toString();
 	}
 
-	protected StringBuffer getIndent(final int level) {
-		final StringBuffer indent = new StringBuffer();
+	protected StringBuffer getIndent(int level) {
+		StringBuffer indent = new StringBuffer();
 		for (int i = 0; i < level; i++) {
 			indent.append("  ");
 		}
@@ -179,7 +163,7 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 	/*
 	 * Self check used in unit testing.
 	 */
-	protected boolean checkCount(final int count, final int length) {
+	protected boolean checkCount(int count, int length) {
 		return count >= (length + 1) /2 && count <= length;
 	}
 
@@ -215,7 +199,7 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 	 * Self check used in unit testing.
 	 */
 	int getValuesCount() {
-		final Node<K, V> nodes[] = getLeafNodes();
+		Node<K, V> nodes[] = getLeafNodes();
 		
 		int count = 0;
 		
@@ -230,13 +214,5 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 	 * Self check used in unit testing.
 	 */
 	abstract K getLastKey();
-	
-	/*
-	 * Self check used in unit testing.
-	 */
-	boolean checkParent(final Node<K, V> parent) {
-		return this.parent == parent;
-	}
-
 	
 }

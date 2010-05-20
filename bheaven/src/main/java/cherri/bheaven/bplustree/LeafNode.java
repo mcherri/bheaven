@@ -32,9 +32,8 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @param parent
 	 * @param next
 	 */
-	public LeafNode(final K[] keys, final V[] values, final int slots,
-			final Node<K, V> parent, final Node<K, V> next) {
-		super(keys, slots, parent);
+	public LeafNode(K[] keys, V[] values, int slots, Node<K, V> next) {
+		super(keys, slots);
 		this.values = values;
 		this.next = next;
 	}
@@ -49,7 +48,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	/**
 	 * @param values the values to set
 	 */
-	public void setValues(final V[] values) {
+	public void setValues(V[] values) {
 		this.values = values;
 	}
 
@@ -63,12 +62,12 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	/**
 	 * @param next the next to set
 	 */
-	public void setNext(final Node<K, V> next) {
+	public void setNext(Node<K, V> next) {
 		this.next = next;
 	}
 	
 	
-	public void insert(final K key, final V value) {
+	public void insert(K key, V value) {
 		K[] keys = getKeys();
 		V[] values = getValues();
 		
@@ -91,14 +90,14 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 		checkIsFull();
 		
 		@SuppressWarnings("unchecked")
-		final K keys[] = (K[]) new Comparable[getKeys().length];
+		K keys[] = (K[]) new Comparable[getKeys().length];
 		@SuppressWarnings("unchecked")
-		final V values[] = (V[]) new Object[getValues().length];
+		V values[] = (V[]) new Object[getValues().length];
 
-		return new LeafNode<K, V>(keys, values, 0, getParent(), next);
+		return new LeafNode<K, V>(keys, values, 0, next);
 	}
 	
-	public void remove(final int index) {
+	public void remove(int index) {
 		K[] keys = getKeys();
 		V[] values = getValues();
 		
@@ -138,7 +137,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#leftShift(int)
 	 */
 	@Override
-	public void leftShift(final int count) {
+	public void leftShift(int count) {
 		for (int i = 0; i < getSlots() - count; i++) {
 			getKeys()[i] = getKeys()[i + count]; 
 			getValues()[i] = getValues()[i + count]; 
@@ -149,7 +148,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#rightShift(int)
 	 */
 	@Override
-	public void rightShift(final int count) {
+	public void rightShift(int count) {
 		for (int i = getSlots() - 1; i >= 0 ; i--) {
 			getKeys()[i + count] = getKeys()[i];
 			getValues()[i + count] = getValues()[i];
@@ -160,7 +159,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToLeft(int)
 	 */
 	@Override
-	public void copyToLeft(final Node<K,V> node, final int count) {
+	public void copyToLeft(Node<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			node.getKeys()[node.getSlots() + i] = getKeys()[i];
 			((LeafNode<K, V>) node).getValues()[node.getSlots() + i] =
@@ -172,7 +171,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToRight(int)
 	 */
 	@Override
-	public void copyToRight(final Node<K,V> node, final int count) {
+	public void copyToRight(Node<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			node.getKeys()[i] = getKeys()[getSlots() - count + i];
 			((LeafNode<K, V>) node).getValues()[i] =
@@ -184,9 +183,9 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#toString(int)
 	 */
 	@Override
-	public String toString(final int level) {
-		final StringBuffer buffer = new StringBuffer(super.toString(level));
-		final StringBuffer indent = getIndent(level);
+	public String toString(int level) {
+		StringBuffer buffer = new StringBuffer(super.toString(level));
+		StringBuffer indent = getIndent(level);
 		buffer.append('\n');
 		
 		if (getSlots() > 0) {
@@ -215,7 +214,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 		return true;
 	}
 	
-	protected boolean isBalanced(final int depth) {
+	protected boolean isBalanced(int depth) {
 		return depth == 0;
 	}
 	

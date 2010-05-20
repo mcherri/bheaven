@@ -32,15 +32,14 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @param slots
 	 * @param parent
 	 */
-	public InnerNode(final K[] keys, final Node<K, V>[] children,
-			final int slots, final Node<K, V> parent) {
-		super(keys, slots, parent);
+	public InnerNode(K[] keys, Node<K, V>[] children, int slots) {
+		super(keys, slots);
 		
 		checkChildrenAreValid(children);
 		this.children = children;
 	}
 
-	private void checkChildrenAreValid(final Node<K, V>[] children) {
+	private void checkChildrenAreValid(Node<K, V>[] children) {
 		if (getKeys() != null && children != null
 				&& getKeys().length + 1 != children.length) {
 			throw new IllegalArgumentException("Keys should be less that " +
@@ -58,12 +57,12 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	/**
 	 * @param children the children to set
 	 */
-	public void setChildren(final Node<K, V>[] children) {
+	public void setChildren(Node<K, V>[] children) {
 		checkChildrenAreValid(children);
 		this.children = children;
 	}
 	
-	public void insert(final K key, final Node<K, V> child) {
+	public void insert(K key, Node<K, V> child) {
 		K[] keys = getKeys();
 		Node<K, V>[] children = getChildren();
 		
@@ -86,14 +85,14 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 		checkIsFull();
 		
 		@SuppressWarnings("unchecked")
-		final K keys[] = (K[]) new Comparable[getKeys().length];
+		K keys[] = (K[]) new Comparable[getKeys().length];
 		@SuppressWarnings("unchecked")
-		final Node<K, V> children[] = new Node[getChildren().length];
+		Node<K, V> children[] = new Node[getChildren().length];
 		
-		return new InnerNode<K, V>(keys, children, 0, getParent());
+		return new InnerNode<K, V>(keys, children, 0);
 	}
 	
-	public void remove(final int index) {
+	public void remove(int index) {
 		K[] keys = getKeys();
 		Node<K, V>[] children = getChildren();
 		
@@ -136,7 +135,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#leftShift(int)
 	 */
 	@Override
-	public void leftShift(final int count) {
+	public void leftShift(int count) {
 		for (int i = 0; i < getSlots() - count; i++) {
 			getKeys()[i] = getKeys()[i + count]; 
 			getChildren()[i] = getChildren()[i + count]; 
@@ -148,7 +147,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#rightShift(int)
 	 */
 	@Override
-	public void rightShift(final int count) {
+	public void rightShift(int count) {
 		for (int i = getSlots() - 1; i >= 0 ; i--) {
 			getKeys()[i + count] = getKeys()[i];
 			getChildren()[i + count + 1] = getChildren()[i + 1];
@@ -161,7 +160,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToLeft(int)
 	 */
 	@Override
-	public void copyToLeft(final Node<K,V> node, final int count) {
+	public void copyToLeft(Node<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			if(i < getSlots()) {
 				node.getKeys()[node.getSlots() + i + 1] =
@@ -169,7 +168,6 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 			}
 			((InnerNode<K, V>) node).getChildren()[node.getSlots() + i + 1] =
 				getChildren()[i];
-			((InnerNode<K, V>) node).getChildren()[node.getSlots() + i + 1].setParent(node);
 		}
 	}
 
@@ -177,17 +175,15 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToRight(int)
 	 */
 	@Override
-	public void copyToRight(final Node<K,V> node, final int count) {
+	public void copyToRight(Node<K,V> node, int count) {
 		for (int i = 0; i < count - 1; i++) {
 			node.getKeys()[i] = 
 				getKeys()[getSlots() - count + i + 1];
 			((InnerNode<K, V>) node).getChildren()[i + 1] =
 				getChildren()[getSlots() - count + i + 2];
-			((InnerNode<K, V>) node).getChildren()[i + 1].setParent(node);
 		}
 		((InnerNode<K, V>) node).getChildren()[0] = 
 			getChildren()[getSlots() - count + 1];
-		((InnerNode<K, V>) node).getChildren()[0].setParent(node);
 
 	}
 
@@ -195,9 +191,9 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#toString(int)
 	 */
 	@Override
-	public String toString(final int level) {
-		final StringBuffer buffer = new StringBuffer(super.toString(level));
-		final StringBuffer indent = getIndent(level);
+	public String toString(int level) {
+		StringBuffer buffer = new StringBuffer(super.toString(level));
+		StringBuffer indent = getIndent(level);
 		buffer.append('\n');
 		
 		if (getSlots() > 0) {
@@ -219,9 +215,9 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * Recursively check that the given depth in the tree depth.
 	 * TODO: Elaborate.
 	 */
-	protected boolean isBalanced(final int depth) {
+	protected boolean isBalanced(int depth) {
 		boolean result = true;
-		final Node<K, V> children[] = getChildren();
+		Node<K, V> children[] = getChildren();
 		for (int i = 0; result && i < getSlots() + 1; i++) {
 			result = result && children[i].isBalanced(depth - 1);
 		}
@@ -239,7 +235,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	@Override
 	boolean checkCount() {
 		boolean result = checkCount(getSlots() + 1, getChildren().length);
-		final Node<K, V> children[] = getChildren();
+		Node<K, V> children[] = getChildren();
 		for (int i = 0; result && i < getSlots() + 1; i++) {
 			result = result && children[i].checkCount();
 		}
@@ -262,7 +258,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	boolean checkKeyOrder() {
 		boolean result = super.checkKeyOrder();
 		
-		final Node<K, V> children[] = getChildren();
+		Node<K, V> children[] = getChildren();
 		for (int i = 0; result && i < getSlots() + 1; i++) {
 			result = result && children[i].checkKeyOrder();
 		}
@@ -283,7 +279,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 		return merge(array);
 	}
 	
-	private Node<K, V>[] merge(final Node<K, V> array[][]) {
+	private Node<K, V>[] merge(Node<K, V> array[][]) {
 		int length = 0;
 		
 		// Find the length.
@@ -292,7 +288,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 		}
 		
 		@SuppressWarnings("unchecked")
-		final Node<K, V> nodes[] = new Node[length];
+		Node<K, V> nodes[] = new Node[length];
 		
 		int pos = 0;
 		for (int i = 0; i < array.length; i++) {
@@ -313,23 +309,9 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	boolean checkLastKey() {
 		boolean result = true;
 		
-		final K keys[] = getKeys();
+		K keys[] = getKeys();
 		for (int i = 0; result && i < getSlots(); i++) {
 			result = result && keys[i].compareTo(getChildren()[i].getLastKey()) >= 0;
-		}
-		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#checkParent(com.cherri.bplustree.Node)
-	 */
-	@Override
-	boolean checkParent(final Node<K, V> parent) {
-		boolean result = super.checkParent(parent);
-		
-		final Node<K, V> children[] = getChildren();
-		for (int i = 0; result && i < getSlots() + 1; i++) {
-			result = result && children[i].checkParent(this);
 		}
 		return result;
 	}
