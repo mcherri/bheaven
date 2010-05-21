@@ -30,105 +30,42 @@ public class BPlusTreeTest {
 	
 	private static final String KEY = "key";
 	private static final String VALUE = "value";
-	private static final String ROOT = "root";
 	private static final String B_TREE_SHOULD_RETURN = "B+ Tree should return \"";
 	private static final String B_TREE_SHOULD_RETURN_REST = "\".";
 	private LeafNode<String, String> root1;
 	private InnerNode<String, String> root2;
 	private InnerNode<String, String> root3;
 	private BPlusTree<String, String> tree1;
-
-	private void assertThatTreeIsValid(BPlusTree<String, String> tree) {
-		assertThat("B+Tree is not valid:\n" + tree.getInvalidReason(),
-				tree.isValid(), is(true));
-	}
 	
-	private String[] generateStrings(int size, int slots, String prefix) {
-		String result[] = new String[size];
-		
-		for (int i = 0; i < slots; i++) {
-			result[i] = prefix + i;
-		}
-		
-		return result;
-	}
-	
-	private Node<String, String>[] getLeafNodes(
-			Node<String, String> parent, int size, int slots,
-			String key, String value) {
-		
-		@SuppressWarnings("unchecked")
-		Node<String, String> nodes[] = new Node[size];
-		Node<String, String> next = null;
-		
-		for (int i = slots - 1; i >= 0; i--) {
-			nodes[i] = new LeafNode<String, String>(
-					generateStrings(size * 2, slots * 2, key + i), 
-					generateStrings(size * 2, slots * 2, value + i), 
-					slots * 2, next);
-			next = nodes[i]; 
-		}
-		
-		return nodes;
-	}
-	
-	private Node<String, String>[] getInnerNodes(
-			Node<String, String> parent, int size, int slots) {
-		
-		@SuppressWarnings("unchecked")
-		Node<String, String> nodes[] = new Node[size];
-		Node<String, String> next = null;
-		
-		for (int i = slots - 1; i >= 0; i--) {
-			nodes[i] = new InnerNode<String, String>(null, null, slots - 1);
-			Node<String, String> children[] = getLeafNodes(nodes[i],
-					size, slots, String.valueOf((char) ('a' + i)), "v"
-							+ ((char) ('a' + i)));
-			
-			((LeafNode<String, String>) children[slots - 1]).setNext(next);
-			
-			String keys[] = getChildrenKeys(children, size, slots);
-			nodes[i].setKeys(keys);
-			((InnerNode<String, String>) nodes[i]).setChildren(children);
-			
-			next = children[0];
-		}
-		
-		return nodes;
-	}
-	
-	private String[] getChildrenKeys(Node<String, String> children[],
-			int size, int slots) {
-		String keys[] = new String[size - 1];
-		for (int j = 0; j < slots - 1; j++) {
-
-			keys[j] = children[j].getLastKey();
-		}
-		return keys;
-	}
-		
 	@Before
 	public void setUp() {
 		tree1 = new BPlusTree<String, String>(4, 5);
 		
 		root1 = new LeafNode<String, String>(
-					generateStrings(10, 5, "a"), 
-					generateStrings(10, 5, "va"), 
+					Utils.generateStrings(10, 5, "a"), 
+					Utils.generateStrings(10, 5, "va"), 
 					5, null);
 		
 		root2 = new InnerNode<String, String>(null, null, 2 - 1);
-		Node<String, String> children2[] = getLeafNodes(root2, 4, 2, "a",
+		Node<String, String> children2[] = Utils.getLeafNodes(root2, 4, 2, "a",
 				"va");
-		String keys2[] = getChildrenKeys(children2, 4, 2);
+		String keys2[] = Utils.getChildrenKeys(children2, 4, 2);
 		root2.setKeys(keys2);
 		root2.setChildren(children2);
 		
 		root3 = new InnerNode<String, String>(null, null, 3 - 1); 
-		Node<String, String> children3[] = getInnerNodes(root3, 5, 3);
-		String keys3[] = getChildrenKeys(children3, 5, 3);
+		Node<String, String> children3[] = Utils.getInnerNodes(root3, 5, 3);
+		String keys3[] = Utils.getChildrenKeys(children3, 5, 3);
 		root3.setKeys(keys3);
 		root3.setChildren(children3);
 		
+	}
+
+	private void assertThatTreeIsValid(BPlusTree<String, String> tree) {
+		BPlusTreeChecker<String, String> checker =
+			new BPlusTreeChecker<String, String>(tree);
+		assertThat("B+Tree is not valid:\n" + checker.getInvalidReason(),
+				checker.isValid(), is(true));
 	}
 	
 	/*@Test
@@ -137,147 +74,6 @@ public class BPlusTreeTest {
 		System.out.println(root2);
 		System.out.println(root3);
 	}*/
-
-	@Test
-	public void balancedValidationBehaviour() {
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root1);
-		
-		assertThat("", tree1.checkTreeIsBalanced(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root2);
-		
-		assertThat("", tree1.checkTreeIsBalanced(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root3);
-		
-		assertThat("", tree1.checkTreeIsBalanced(), is(true));
-		
-		@SuppressWarnings("unchecked")
-		Node<String, String> children41[] = new Node[] {
-			new LeafNode<String, String>(null, null, 0, null),
-			new LeafNode<String, String>(null, null, 0, null)
-		};
-		Node<String, String> children31[] = ((InnerNode<String, String>) root3
-				.getChildren()[0]).getChildren();
-		String keys[] = { "k1" };
-		children31[1] = new InnerNode<String, String>(keys, children41, 2);
-		
-		assertThat("", tree1.checkTreeIsBalanced(), is(false));
-	}
-	
-	@Test
-	public void internalNodesEntriesCountBehaviour() {
-		ReflectionTestUtils.setField(tree1, ROOT, root1);
-		
-		assertThat("", tree1.checkInternalNodesChildrenCount(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root2);
-		
-		assertThat("", tree1.checkInternalNodesChildrenCount(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root3);
-		
-		assertThat("", tree1.checkInternalNodesChildrenCount(), is(true));
-		
-		InnerNode<String, String> node =
-			(InnerNode<String, String>) root3.getChildren()[0];
-		node.getChildren()[2] = null;
-		node.setSlots(1);
-		
-		assertThat("", tree1.checkInternalNodesChildrenCount(), is(false));
-	}
-	
-	@Test
-	public void rootNodeBehaviour() {
-		ReflectionTestUtils.setField(tree1, ROOT, root1);
-		
-		assertThat("", tree1.checkRootNode(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root2);
-		
-		assertThat("", tree1.checkRootNode(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root3);
-		
-		assertThat("", tree1.checkRootNode(), is(true));
-		
-		root3.getChildren()[1] = null;
-		root3.setSlots(0);
-		
-		assertThat("", tree1.checkRootNode(), is(false));
-	}
-	
-	@Test
-	public void internalNodesKeysCountWithRespectToChildrenBehaviour() {
-		ReflectionTestUtils.setField(tree1, ROOT, root1);
-		
-		assertThat("",
-				tree1.checkInternalNodesKeysCountWithRespectToChildren(),
-				is(true));
-
-		ReflectionTestUtils.setField(tree1, ROOT, root2);
-
-		assertThat("",
-				tree1.checkInternalNodesKeysCountWithRespectToChildren(),
-				is(true));
-
-		ReflectionTestUtils.setField(tree1, ROOT, root3);
-
-		assertThat("",
-				tree1.checkInternalNodesKeysCountWithRespectToChildren(),
-				is(true));
-		
-		root3.getKeys()[0] = "a20";
-		
-		assertThat("",
-				tree1.checkInternalNodesKeysCountWithRespectToChildren(),
-				is(false));
-	}
-	
-	@Test
-	public void internalNodesKeysOrderBehaviour() {
-		ReflectionTestUtils.setField(tree1, ROOT, root1);
-		
-		assertThat("", tree1.checkInternalNodesKeysOrder(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root2);
-		
-		assertThat("", tree1.checkInternalNodesKeysOrder(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root3);
-		
-		assertThat("", tree1.checkInternalNodesKeysOrder(), is(true));
-		
-		String keys[] = root3.getKeys();
-		String temp = keys[0];
-		keys[0] = keys[1];
-		keys[1] = temp;
-		
-		assertThat("", tree1.checkInternalNodesKeysOrder(), is(false));
-	}
-	
-	@Test
-	public void leafNodesLinksOrderBehaviour() {
-		ReflectionTestUtils.setField(tree1, ROOT, root1);
-		
-		assertThat("", tree1.checkLeafNodesLinksOrder(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root2);
-		
-		assertThat("", tree1.checkLeafNodesLinksOrder(), is(true));
-		
-		ReflectionTestUtils.setField(tree1, ROOT, root3);
-		
-		assertThat("", tree1.checkLeafNodesLinksOrder(), is(true));
-		
-		Node<String, String> children[] = root3.getChildren();
-		Node<String, String> temp = children[0];
-		children[0] = children[1];
-		children[1] = temp;
-		
-		assertThat("", tree1.checkLeafNodesLinksOrder(), is(false));
-	}
 	
 	@Test
 	public void bPlusTreeShouldReturnNullWhenGettingANonExistantKey() {
@@ -292,7 +88,7 @@ public class BPlusTreeTest {
 	@Test
 	public void bPlusTreeShouldReturnTheCorrespondingKeyValue() {
 		
-		ReflectionTestUtils.setField(tree1, ROOT, root1);
+		ReflectionTestUtils.setField(tree1, Constants.ROOT, root1);
 		
 		for (int i = 0; i < 5; i++) {
 			assertThat(
@@ -302,7 +98,7 @@ public class BPlusTreeTest {
 		
 		assertThatTreeIsValid(tree1);
 		
-		ReflectionTestUtils.setField(tree1, ROOT, root2);
+		ReflectionTestUtils.setField(tree1, Constants.ROOT, root2);
 		
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 4; j++) {
@@ -314,7 +110,7 @@ public class BPlusTreeTest {
 		
 		assertThatTreeIsValid(tree1);
 		
-		ReflectionTestUtils.setField(tree1, ROOT, root3);
+		ReflectionTestUtils.setField(tree1, Constants.ROOT, root3);
 		
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
@@ -349,7 +145,7 @@ public class BPlusTreeTest {
 		
 		@SuppressWarnings("unchecked")
 		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, ROOT);
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Inserting in an empty B+ tree should initiate the root node" +
@@ -363,7 +159,7 @@ public class BPlusTreeTest {
 	private void assertThatValuesCountIs(BPlusTree<String, String> tree,
 			int count) {
 		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, ROOT);
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 
 		assertThat("Tree has an incorrect values count.", node.getValuesCount(), is(count));
 	}
@@ -412,7 +208,7 @@ public class BPlusTreeTest {
 	private void assertThatSplitOccured(String message,
 			BPlusTree<String, String> tree, int count, int depth) {
 		Node<String, String> node = (Node<String, String>) ReflectionTestUtils
-				.getField(tree, ROOT);
+				.getField(tree, Constants.ROOT);
 		
 		assertThat(message, node
 				.getSlots() + 1, is(count));
@@ -499,7 +295,7 @@ public class BPlusTreeTest {
 		
 		@SuppressWarnings("unchecked")
 		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, ROOT);
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Deleting the last element from B+ tree should null the root" +
@@ -558,7 +354,7 @@ public class BPlusTreeTest {
 		
 		@SuppressWarnings("unchecked")
 		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, ROOT);
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Inserting and Deleting the same keys should give a valid " +
