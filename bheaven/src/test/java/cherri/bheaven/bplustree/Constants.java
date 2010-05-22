@@ -22,8 +22,11 @@ package cherri.bheaven.bplustree;
 /**
  *
  */
-public class Constants {
+public final class Constants {
 
 	public static final String ROOT = "root";
 
+	private Constants() {
+		throw new AssertionError();
+	}
 }

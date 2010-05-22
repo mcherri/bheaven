@@ -282,17 +282,15 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		return newLeafNode;
 	}
 	
-	private Node<K, V>[] getSiblings(Node<K, V> node,
-			List<Breadcrumb<K, V>> breadcrumbList, int position) {
+	private Node<K, V>[] getSiblings(List<Breadcrumb<K, V>> breadcrumbList,
+			int position) {
 		InnerNode<K, V> parent =
 			(InnerNode<K, V>) getParent(breadcrumbList, position);
 		
 		int index = getIndex(breadcrumbList, position);
 		
 		// Should never happen.
-		if (index < 0) {
-			throw new IllegalArgumentException("Node is not child of parent!");
-		}
+		checkIndex(index);
 		
 		@SuppressWarnings("unchecked")
 		Node<K, V> results[] = new Node[2];
@@ -307,6 +305,12 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 
 		return results;
 	}
+
+	private void checkIndex(int index) {
+		if (index < 0) {
+			throw new IllegalArgumentException("Node is not child of parent!");
+		}
+	}
 	
 	private void updateLeafParentKey(Node<K, V> node, int nodeIndex,
 			List<Breadcrumb<K, V>> breadcrumbList, int position) {
@@ -315,40 +319,31 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		
 		int index = getIndex(breadcrumbList, position) + nodeIndex;
 		
-		// Should never happen.
-		if (index < 0) {
-			throw new IllegalArgumentException("Node is not child of parent!");
-		}
+		checkIndex(index);
 		
 		parent.getKeys()[index] =  node.getKeys()[node.getSlots() - 1];
 	}
 	
-	private K getParentKey(Node<K, V> node, boolean left,
-			List<Breadcrumb<K, V>> breadcrumbList, int position) {
+	private K getParentKey(boolean left, List<Breadcrumb<K, V>> breadcrumbList,
+			int position) {
 		InnerNode<K, V> parent = 
 			(InnerNode<K, V>) getParent(breadcrumbList, position - 1);
 		
 		int index = getIndex(breadcrumbList, position - 1);
 		
-		// Should never happen.
-		if (index < 0) {
-			throw new IllegalArgumentException("Node is not child of parent!");
-		}
+		checkIndex(index);
 		
 		return parent.getKeys()[left ? index - 1 : index];
 	}
 	
-	private void updateParentKey(Node<K, V> node, int nodeIndex, K key,
+	private void updateParentKey(int nodeIndex, K key,
 			List<Breadcrumb<K, V>> breadcrumbList, int position) {
 		InnerNode<K, V> parent = 
 			(InnerNode<K, V>) getParent(breadcrumbList, position - 1);
 		
 		int index = getIndex(breadcrumbList, position - 1) + nodeIndex;
 		
-		// Should never happen.
-		if (index < 0) {
-			throw new IllegalArgumentException("Node is not child of parent!");
-		}
+		checkIndex(index);
 
 		parent.getKeys()[index] = key;
 	}
@@ -367,10 +362,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			
 			index = getIndex(breadcrumbList, loopPosition); //search(parent.getChildren(), node);
 			
-			// Should never happen.
-			if (index < 0) {
-				throw new IllegalArgumentException("Node is not child of parent!");
-			}
+			checkIndex(index);
 			
 			node = parent;
 			loopPosition--;
@@ -391,25 +383,22 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	/*
 	 * TODO Complex Method
 	 */
-	private void removeParentKey(Node<K, V> node,
-			List<Breadcrumb<K, V>> breadcrumbList, int position) {
+	private void removeParentKey(List<Breadcrumb<K, V>> breadcrumbList,
+			int position) {
 		InnerNode<K, V> parent =
 			(InnerNode<K, V>) getParent(breadcrumbList, position);
 		
 		if (parent != null) {
 			int index = getIndex(breadcrumbList, position);
 			
-			// Should never happen.
-			if (index < 0) {
-				throw new IllegalArgumentException("Node is not child of parent!");
-			}
+			checkIndex(index);
 			
 			parent.remove(index);
 			
 			if (parent != root) {
 				if (!parent.hasEnoughSlots()) {
 					Node<K, V> siblings[] =
-						getSiblings(parent, breadcrumbList, position - 1);
+						getSiblings(breadcrumbList, position - 1);
 					int siblingIndex = getSiblingIndex(siblings);
 					
 					if (canGiveSlots(siblings)) {
@@ -417,19 +406,19 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 								parent.getSlots()) / 2;
 						if (siblingIndex == 0) {
 							parent.rightShift(count);
-							parent.getKeys()[count - 1] = getParentKey(parent, true, breadcrumbList, position);
+							parent.getKeys()[count - 1] = getParentKey(true, breadcrumbList, position);
 							siblings[siblingIndex].copyToRight(parent, count);
 						} else {
-							parent.getKeys()[parent.getSlots()] = getParentKey(parent, false, breadcrumbList, position);
+							parent.getKeys()[parent.getSlots()] = getParentKey(false, breadcrumbList, position);
 							siblings[siblingIndex].copyToLeft(parent, count);
 							siblings[siblingIndex].leftShift(count);
 						}
 						parent.setSlots(parent.getSlots() + count);
 						siblings[siblingIndex].setSlots(siblings[siblingIndex].getSlots() - count);
-						updateParentKey(siblingIndex == 0 ? siblings[0] : parent,
-								siblingIndex == 0 ? -1 : 0,
-										(siblingIndex == 0 ? siblings[0] : parent).getKeys()[(siblingIndex == 0 ? siblings[0] : parent).getSlots()],
-										breadcrumbList, position);
+						updateParentKey(siblingIndex == 0 ? -1 : 0,
+								(siblingIndex == 0 ? siblings[0] : parent).getKeys()[(siblingIndex == 0 ? siblings[0] : parent).getSlots()],
+										breadcrumbList,
+										position);
 					} else {
 				/*
 				         b. If both Lleft and Lright have only the minimum number of
@@ -444,16 +433,16 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 				*/
 						if(siblingIndex == 0) {
 							siblings[siblingIndex].getKeys()[siblings[siblingIndex].getSlots()] =
-								getParentKey(parent, true, breadcrumbList, position);
+								getParentKey(true, breadcrumbList, position);
 							parent.copyToLeft(siblings[siblingIndex], parent.getSlots() + 1);
 						} else {
 							siblings[siblingIndex].rightShift(siblings[siblingIndex].getSlots());
 							siblings[siblingIndex].getKeys()[parent.getSlots()] =
-								getParentKey(parent, false, breadcrumbList, position);
+								getParentKey(false, breadcrumbList, position);
 							parent.copyToRight(siblings[siblingIndex], parent.getSlots() + 1);
 						}
 						siblings[siblingIndex].setSlots(siblings[siblingIndex].getSlots() + parent.getSlots() + 1);
-						removeParentKey(parent, breadcrumbList, position - 1);
+						removeParentKey(breadcrumbList, position - 1);
 					}
 	
 				}
@@ -508,7 +497,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			      to L -- at most one of these may not exist.
 			*/
 				Node<K, V> siblings[] =
-					getSiblings(leafNode, breadcrumbList, position);
+					getSiblings(breadcrumbList, position);
 				int siblingIndex = getSiblingIndex(siblings);
 				
 				if (canGiveSlots(siblings)) {
@@ -553,7 +542,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 					} else {
 						((LeafNode<K,V>) siblings[0]).setNext(leafNode.getNext());
 					}
-					removeParentKey(leafNode, breadcrumbList, position);
+					removeParentKey(breadcrumbList, position);
 				}
 			/*
 			         c. If the last two children of the root merge together into

@@ -23,7 +23,7 @@ package cherri.bheaven.bplustree;
  *
  */
 public class InnerNodeChecker<K extends Comparable<K>, V> extends
-		NodeChecker<K, V> {
+		AbstractNodeChecker<K, V> {
 
 	InnerNodeChecker(InnerNode<K, V> node) {
 		super(node);
@@ -35,7 +35,7 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	@Override
 	public int getDepth() {
 		Node<K, V> firstChild = ((InnerNode<K, V>) node).getChildren()[0];
-		return NodeChecker.getNodeChecker(firstChild).getDepth() + 1;
+		return AbstractNodeChecker.getNodeChecker(firstChild).getDepth() + 1;
 	}
 
 	/* (non-Javadoc)
@@ -46,8 +46,8 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 		boolean result = true;
 		Node<K, V> children[] = ((InnerNode<K, V>) node).getChildren();
 		for (int i = 0; result && i < node.getSlots() + 1; i++) {
-			NodeChecker<K, V> nodeChecker =
-				NodeChecker.getNodeChecker(children[i]);
+			AbstractNodeChecker<K, V> nodeChecker =
+				AbstractNodeChecker.getNodeChecker(children[i]);
 			result = result && nodeChecker.isBalanced(depth - 1);
 		}
 		
@@ -58,7 +58,7 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#isBalanced()
 	 */
 	@Override
-	boolean isBalanced() {
+	public boolean isBalanced() {
 		return isBalanced(getDepth());
 	}
 	
@@ -66,12 +66,12 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#checkCount()
 	 */
 	@Override
-	boolean checkCount() {
+	public boolean checkCount() {
 		Node<K, V> children[] = ((InnerNode<K, V>) node).getChildren();
 		boolean result = checkCount(node.getSlots() + 1, children.length);
 		for (int i = 0; result && i < node.getSlots() + 1; i++) {
-			NodeChecker<K, V> nodeChecker =
-				NodeChecker.getNodeChecker(children[i]);
+			AbstractNodeChecker<K, V> nodeChecker =
+				AbstractNodeChecker.getNodeChecker(children[i]);
 			result = result && nodeChecker.checkCount();
 		}
 		
@@ -90,13 +90,13 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#checkKeyOrder()
 	 */
 	@Override
-	boolean checkKeyOrder() {
+	public boolean checkKeyOrder() {
 		boolean result = super.checkKeyOrder();
 		
 		Node<K, V> children[] = ((InnerNode<K, V>) node).getChildren();
 		for (int i = 0; result && i < node.getSlots() + 1; i++) {
-			NodeChecker<K, V> nodeChecker =
-				NodeChecker.getNodeChecker(children[i]);
+			AbstractNodeChecker<K, V> nodeChecker =
+				AbstractNodeChecker.getNodeChecker(children[i]);
 			result = result && nodeChecker.checkKeyOrder();
 		}
 		return result;
@@ -106,14 +106,14 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#getLeafNodes()
 	 */
 	@Override
-	Node<K, V>[] getLeafNodes() {
+	public Node<K, V>[] getLeafNodes() {
 		@SuppressWarnings("unchecked")
 		Node<K, V> array[][] = new Node[node.getSlots() + 1][];
 		
 		Node<K, V> children[] = ((InnerNode<K, V>) node).getChildren();
 		for (int i = 0; i < node.getSlots() + 1; i++) {
-			NodeChecker<K, V> nodeChecker =
-				NodeChecker.getNodeChecker(children[i]);
+			AbstractNodeChecker<K, V> nodeChecker =
+				AbstractNodeChecker.getNodeChecker(children[i]);
 			array[i] = nodeChecker.getLeafNodes();
 		}
 		return merge(array);
@@ -143,23 +143,23 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#getLastKey()
 	 */
 	@Override
-	K getLastKey() {
+	public K getLastKey() {
 		Node<K, V> lastChild =
 			((InnerNode<K, V>) node).getChildren()[node.getSlots()];
-		NodeChecker<K, V> nodeChecker = NodeChecker.getNodeChecker(lastChild);
+		AbstractNodeChecker<K, V> nodeChecker = AbstractNodeChecker.getNodeChecker(lastChild);
 		return nodeChecker.getLastKey();
 	}
 
 	/*
 	 * Self check used in unit testing.
 	 */
-	boolean checkLastKey() {
+	public boolean checkLastKey() {
 		boolean result = true;
 		
 		K keys[] = node.getKeys();
 		for (int i = 0; result && i < node.getSlots(); i++) {
-			NodeChecker<K, V> nodeChecker =
-				NodeChecker.getNodeChecker(((InnerNode<K, V>) node).getChildren()[i]);
+			AbstractNodeChecker<K, V> nodeChecker =
+				AbstractNodeChecker.getNodeChecker(((InnerNode<K, V>) node).getChildren()[i]);
 			result = result && keys[i].compareTo(nodeChecker.getLastKey()) >= 0;
 		}
 		return result;

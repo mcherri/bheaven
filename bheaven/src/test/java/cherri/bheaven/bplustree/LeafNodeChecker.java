@@ -23,7 +23,7 @@ package cherri.bheaven.bplustree;
  *
  */
 public class LeafNodeChecker<K extends Comparable<K>, V> extends
-		NodeChecker<K, V> {
+		AbstractNodeChecker<K, V> {
 
 	/**
 	 * @param node
@@ -44,7 +44,7 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#isBalanced()
 	 */
 	@Override
-	boolean isBalanced() {
+	public boolean isBalanced() {
 		return true;
 	}
 
@@ -60,7 +60,7 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#checkCount()
 	 */
 	@Override
-	boolean checkCount() {
+	public boolean checkCount() {
 		return checkCount(node.getSlots(), node.getKeys().length);
 	}
 
@@ -77,7 +77,7 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	Node<K, V>[] getLeafNodes() {
+	public Node<K, V>[] getLeafNodes() {
 		return new Node[] { node };
 	}
 
@@ -85,7 +85,7 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#getLastKey()
 	 */
 	@Override
-	K getLastKey() {
+	public K getLastKey() {
 		return node.getKeys()[node.getSlots() - 1];
 	}
 

@@ -22,18 +22,18 @@ package cherri.bheaven.bplustree;
 /**
  *
  */
-public abstract class NodeChecker<K extends Comparable<K>, V> {
+public abstract class AbstractNodeChecker<K extends Comparable<K>, V> {
 	
 	protected Node<K, V> node;
 	
 	/**
 	 * @param node
 	 */
-	NodeChecker(Node<K, V> node) {
+	AbstractNodeChecker(Node<K, V> node) {
 		this.node = node;
 	}
 	
-	public static <K extends Comparable<K>, V> NodeChecker<K, V> getNodeChecker(
+	public static <K extends Comparable<K>, V> AbstractNodeChecker<K, V> getNodeChecker(
 			Node<K, V> node) {
 		if(node instanceof InnerNode<?, ?>) {
 			return new InnerNodeChecker<K, V>((InnerNode<K, V>) node);
@@ -53,7 +53,7 @@ public abstract class NodeChecker<K extends Comparable<K>, V> {
 	 * Recursively check that the given depth in the tree depth.
 	 * TODO: Elaborate.
 	 */
-	abstract boolean isBalanced();
+	public abstract boolean isBalanced();
 	
 	/*
 	 * Self check used in unit testing.
@@ -70,7 +70,7 @@ public abstract class NodeChecker<K extends Comparable<K>, V> {
 	/*
 	 * Self check used in unit testing.
 	 */
-	abstract boolean checkCount();
+	public abstract boolean checkCount();
 	
 	/*
 	 * Self check used in unit testing.
@@ -80,7 +80,7 @@ public abstract class NodeChecker<K extends Comparable<K>, V> {
 	/*
 	 * Self check used in unit testing.
 	 */
-	boolean checkKeyOrder() {
+	public boolean checkKeyOrder() {
 		boolean result = true;
 		int index = 0;
 		K[] keys = node.getKeys();
@@ -94,12 +94,12 @@ public abstract class NodeChecker<K extends Comparable<K>, V> {
 	/*
 	 * Self check used in unit testing.
 	 */
-	abstract Node<K, V>[] getLeafNodes();
+	public abstract Node<K, V>[] getLeafNodes();
 	
 	/*
 	 * Self check used in unit testing.
 	 */
-	int getValuesCount() {
+	public int getValuesCount() {
 		Node<K, V> nodes[] = getLeafNodes();
 		
 		int count = 0;
@@ -114,7 +114,7 @@ public abstract class NodeChecker<K extends Comparable<K>, V> {
 	/*
 	 * Self check used in unit testing.
 	 */
-	abstract K getLastKey();
+	public abstract K getLastKey();
 	
 
 }

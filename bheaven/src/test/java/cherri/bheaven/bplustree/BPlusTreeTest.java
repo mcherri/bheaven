@@ -19,7 +19,9 @@
  */
 package cherri.bheaven.bplustree;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
@@ -162,7 +164,7 @@ public class BPlusTreeTest {
 			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 
 		assertThat("Tree has an incorrect values count.",
-				NodeChecker.getNodeChecker(node).getValuesCount(), is(count));
+				AbstractNodeChecker.getNodeChecker(node).getValuesCount(), is(count));
 	}
 	
 	private void forwardFill(BPlusTree<String, String> tree, int count) {

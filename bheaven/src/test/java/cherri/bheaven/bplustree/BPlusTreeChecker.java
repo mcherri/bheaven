@@ -24,7 +24,7 @@ package cherri.bheaven.bplustree;
  */
 public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	
-	private Node<K, V> root;
+	private final Node<K, V> root;
 	
 	/**
 	 * @param tree
@@ -39,8 +39,8 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * the leaf nodes, which are all found at the same level in the tree,
 	 * so the tree is always height balanced. 
 	 */
-	boolean checkTreeIsBalanced() {
-		return root == null || NodeChecker.getNodeChecker(root).isBalanced();
+	public boolean checkTreeIsBalanced() {
+		return root == null || AbstractNodeChecker.getNodeChecker(root).isBalanced();
 	}
 
 	
@@ -48,7 +48,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * All internal nodes, except the root, have between 
 	 * Ceiling(m/2) and m children.	
 	 */
-	boolean checkInternalNodesChildrenCount() {
+	public boolean checkInternalNodesChildrenCount() {
 		if(root == null) {
 			return true;
 		}
@@ -58,8 +58,8 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 			Node<K, V> children[] = ((InnerNode<K, V>) root)
 					.getChildren();
 			for (int i = 0; result && i < root.getSlots() + 1; i++) {
-				NodeChecker<K, V> nodeChecker =
-					NodeChecker.getNodeChecker(children[i]);
+				AbstractNodeChecker<K, V> nodeChecker =
+					AbstractNodeChecker.getNodeChecker(children[i]);
 				result = result && nodeChecker.checkCount();
 			}
 	
@@ -71,9 +71,9 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	/**
 	 * The root is either a leaf or has at least two children.
 	 */
-	boolean checkRootNode() {
+	public boolean checkRootNode() {
 		return root == null ||
-				NodeChecker.getNodeChecker(root).checkRootNode();
+				AbstractNodeChecker.getNodeChecker(root).checkRootNode();
 	}
 	
 	/**
@@ -83,13 +83,13 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * and these keys partition the keys in the children in the fashion of a
 	 * search tree. 
 	 */
-	boolean checkInternalNodesKeysCountWithRespectToChildren() {
+	public boolean checkInternalNodesKeysCountWithRespectToChildren() {
 		/* Inernal node will always have key values one less than then number
 		 * of its non-empty children according to our node structure. The
 		 * remaining thing to check it the last node key value.
 		 */  
 		if(root instanceof InnerNode<?, ?>) {
-			return ((InnerNodeChecker<K, V>) NodeChecker.getNodeChecker(root)).checkLastKey();
+			return ((InnerNodeChecker<K, V>) AbstractNodeChecker.getNodeChecker(root)).checkLastKey();
 		}
 		return true;
 	}
@@ -98,8 +98,8 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * Internal nodes keys are stored in non-decreasing order (i.e. sorted in
 	 * lexicographical order).
 	 */ 
-	boolean checkInternalNodesKeysOrder() {
-		return root == null || NodeChecker.getNodeChecker(root).checkKeyOrder();
+	public boolean checkInternalNodesKeysOrder() {
+		return root == null || AbstractNodeChecker.getNodeChecker(root).checkKeyOrder();
 	}
 	
 	/**
@@ -109,7 +109,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * record pointer, etcetera. The leaf pages must store enough records to
 	 * remain at least half full. 
 	 */
-	boolean checkLeafNodesEntriesCount() {
+	public boolean checkLeafNodesEntriesCount() {
 		return checkInternalNodesChildrenCount();
 	}
 	
@@ -119,12 +119,12 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * accessing the B+ tree index. This also supports fast processing of
 	 * range-search queries. 
 	 */
-	boolean checkLeafNodesLinksOrder() {
+	public boolean checkLeafNodesLinksOrder() {
 		if(root == null) {
 			return true;
 		}
 		
-		Node<K, V> nodes[] = NodeChecker.getNodeChecker(root).getLeafNodes();
+		Node<K, V> nodes[] = AbstractNodeChecker.getNodeChecker(root).getLeafNodes();
 		
 		for (int i = 0; i < nodes.length - 1; i++) {
 			LeafNode<K, V> node = (LeafNode<K, V>) nodes[i]; 
@@ -139,7 +139,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	/**
 	 * Method used in unit testing to check the validity of the B+ Tree 
 	 */
-	boolean isValid() {
+	public boolean isValid() {
 		return checkTreeIsBalanced() &&
 				checkInternalNodesChildrenCount() &&
 				checkRootNode() &&
@@ -153,7 +153,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * @return A message containing the reason why the B+Tree is invalid.
 	 *         If the B+ Tree is valid, an empty string is returned.
 	 */
-	String getInvalidReason() {
+	public String getInvalidReason() {
 		StringBuffer message = new StringBuffer(520);
 		
 		if (!checkTreeIsBalanced()) {

@@ -54,7 +54,7 @@ public class Utils {
 		String keys[] = new String[size - 1];
 		for (int j = 0; j < slots - 1; j++) {
 	
-			keys[j] = NodeChecker.getNodeChecker(children[j]).getLastKey();
+			keys[j] = AbstractNodeChecker.getNodeChecker(children[j]).getLastKey();
 		}
 		return keys;
 	}
