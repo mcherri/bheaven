@@ -40,7 +40,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * so the tree is always height balanced. 
 	 */
 	boolean checkTreeIsBalanced() {
-		return root == null || root.isBalanced();
+		return root == null || NodeChecker.getNodeChecker(root).isBalanced();
 	}
 
 	
@@ -58,7 +58,9 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 			Node<K, V> children[] = ((InnerNode<K, V>) root)
 					.getChildren();
 			for (int i = 0; result && i < root.getSlots() + 1; i++) {
-				result = result && children[i].checkCount();
+				NodeChecker<K, V> nodeChecker =
+					NodeChecker.getNodeChecker(children[i]);
+				result = result && nodeChecker.checkCount();
 			}
 	
 		}
@@ -70,7 +72,8 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * The root is either a leaf or has at least two children.
 	 */
 	boolean checkRootNode() {
-		return root == null || root.checkRootNode();
+		return root == null ||
+				NodeChecker.getNodeChecker(root).checkRootNode();
 	}
 	
 	/**
@@ -86,7 +89,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 		 * remaining thing to check it the last node key value.
 		 */  
 		if(root instanceof InnerNode<?, ?>) {
-			return ((InnerNode<K, V>) root).checkLastKey();
+			return ((InnerNodeChecker<K, V>) NodeChecker.getNodeChecker(root)).checkLastKey();
 		}
 		return true;
 	}
@@ -96,7 +99,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * lexicographical order).
 	 */ 
 	boolean checkInternalNodesKeysOrder() {
-		return root == null || root.checkKeyOrder();
+		return root == null || NodeChecker.getNodeChecker(root).checkKeyOrder();
 	}
 	
 	/**
@@ -121,7 +124,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 			return true;
 		}
 		
-		Node<K, V> nodes[] = root.getLeafNodes();
+		Node<K, V> nodes[] = NodeChecker.getNodeChecker(root).getLeafNodes();
 		
 		for (int i = 0; i < nodes.length - 1; i++) {
 			LeafNode<K, V> node = (LeafNode<K, V>) nodes[i]; 

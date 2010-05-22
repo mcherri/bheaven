@@ -110,14 +110,6 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#getDepth()
-	 */
-	@Override
-	public int getDepth() {
-		return 0;
-	}
-
-	/* (non-Javadoc)
 	 * @see com.cherri.bplustree.Node#hasEnoughSlots()
 	 */
 	@Override
@@ -208,52 +200,6 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 		buffer.append(next == null ? "null" : next.getKeys()[0]);
 		
 		return buffer.toString();
-	}
-
-	boolean isBalanced() {
-		return true;
-	}
-	
-	protected boolean isBalanced(int depth) {
-		return depth == 0;
-	}
-	
-	
-	/*boolean checkKeysCount() {
-		return slots >= (keys.length + 1) /2 && slots <= keys.length;
-	}*/
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#checkCount()
-	 */
-	@Override
-	boolean checkCount() {
-		return checkCount(getSlots(), getKeys().length);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#checkRootNode()
-	 */
-	@Override
-	protected boolean checkRootNode() {
-		return true;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#getLeafNodes()
-	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	Node<K, V>[] getLeafNodes() {
-		return new Node[] { this };
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#getLastKey()
-	 */
-	@Override
-	K getLastKey() {
-		return getKeys()[getSlots() - 1];
 	}
 
 }

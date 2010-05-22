@@ -161,7 +161,8 @@ public class BPlusTreeTest {
 		Node<String, String> node =
 			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 
-		assertThat("Tree has an incorrect values count.", node.getValuesCount(), is(count));
+		assertThat("Tree has an incorrect values count.",
+				NodeChecker.getNodeChecker(node).getValuesCount(), is(count));
 	}
 	
 	private void forwardFill(BPlusTree<String, String> tree, int count) {

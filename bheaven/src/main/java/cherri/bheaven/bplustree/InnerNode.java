@@ -108,14 +108,6 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#getDepth()
-	 */
-	@Override
-	public int getDepth() {
-		return getChildren()[0].getDepth() + 1;
-	}
-
-	/* (non-Javadoc)
 	 * @see com.cherri.bplustree.Node#hasEnoughSlots()
 	 */
 	@Override
@@ -209,111 +201,6 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 		}
 
 		return buffer.toString();
-	}
-
-	/*
-	 * Recursively check that the given depth in the tree depth.
-	 * TODO: Elaborate.
-	 */
-	protected boolean isBalanced(int depth) {
-		boolean result = true;
-		Node<K, V> children[] = getChildren();
-		for (int i = 0; result && i < getSlots() + 1; i++) {
-			result = result && children[i].isBalanced(depth - 1);
-		}
-		
-		return result;
-	}
-
-	boolean isBalanced() {
-		return isBalanced(getDepth());
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#checkInternalNodesEntriesCount()
-	 */
-	@Override
-	boolean checkCount() {
-		boolean result = checkCount(getSlots() + 1, getChildren().length);
-		Node<K, V> children[] = getChildren();
-		for (int i = 0; result && i < getSlots() + 1; i++) {
-			result = result && children[i].checkCount();
-		}
-		
-		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#checkRootNode()
-	 */
-	@Override
-	protected boolean checkRootNode() {
-		return getSlots() > 0;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#checkKeyOrder()
-	 */
-	@Override
-	boolean checkKeyOrder() {
-		boolean result = super.checkKeyOrder();
-		
-		Node<K, V> children[] = getChildren();
-		for (int i = 0; result && i < getSlots() + 1; i++) {
-			result = result && children[i].checkKeyOrder();
-		}
-		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.cherri.bplustree.Node#getLeafNodes()
-	 */
-	@Override
-	Node<K, V>[] getLeafNodes() {
-		@SuppressWarnings("unchecked")
-		Node<K, V> array[][] = new Node[getSlots() + 1][];
-		
-		for (int i = 0; i < getSlots() + 1; i++) {
-			array[i] = children[i].getLeafNodes();
-		}
-		return merge(array);
-	}
-	
-	private Node<K, V>[] merge(Node<K, V> array[][]) {
-		int length = 0;
-		
-		// Find the length.
-		for (int i = 0; i < array.length; i++) {
-			length += array[i].length;
-		}
-		
-		@SuppressWarnings("unchecked")
-		Node<K, V> nodes[] = new Node[length];
-		
-		int pos = 0;
-		for (int i = 0; i < array.length; i++) {
-			System.arraycopy(array[i], 0, nodes, pos, array[i].length);
-			pos += array[i].length;
-		}
-		
-		return nodes;
-	}
-	
-	K getLastKey() {
-		return getChildren()[getSlots()].getLastKey();
-	}
-	
-	/*
-	 * Self check used in unit testing.
-	 */
-	boolean checkLastKey() {
-		boolean result = true;
-		
-		K keys[] = getKeys();
-		for (int i = 0; result && i < getSlots(); i++) {
-			result = result && keys[i].compareTo(getChildren()[i].getLastKey()) >= 0;
-		}
-		return result;
 	}
 
 }
