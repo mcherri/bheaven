@@ -19,13 +19,15 @@
  */
 package cherri.bheaven.bplustree;
 
+import cherri.bheaven.bplustree.memory.MemoryInnerNode;
+
 /**
  *
  */
 public class InnerNodeChecker<K extends Comparable<K>, V> extends
 		AbstractNodeChecker<K, V> {
 
-	InnerNodeChecker(InnerNode<K, V> node) {
+	InnerNodeChecker(MemoryInnerNode<K, V> node) {
 		super(node);
 	}
 
@@ -34,7 +36,7 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 */
 	@Override
 	public int getDepth() {
-		AbstractNode<K, V> firstChild = ((InnerNode<K, V>) node).getChild(0);
+		Node<K, V> firstChild = ((InnerNode<K, V>) node).getChild(0);
 		return AbstractNodeChecker.getNodeChecker(firstChild).getDepth() + 1;
 	}
 
@@ -106,9 +108,9 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 * @see cherri.bheaven.bplustree.NodeChecker#getLeafNodes()
 	 */
 	@Override
-	public AbstractNode<K, V>[] getLeafNodes() {
+	public Node<K, V>[] getLeafNodes() {
 		@SuppressWarnings("unchecked")
-		AbstractNode<K, V> array[][] = new AbstractNode[node.getSlots() + 1][];
+		Node<K, V> array[][] = new Node[node.getSlots() + 1][];
 		
 		for (int i = 0; i < node.getSlots() + 1; i++) {
 			AbstractNodeChecker<K, V> nodeChecker =
@@ -119,7 +121,7 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 		return merge(array);
 	}
 	
-	private AbstractNode<K, V>[] merge(AbstractNode<K, V> array[][]) {
+	private Node<K, V>[] merge(Node<K, V> array[][]) {
 		int length = 0;
 		
 		// Find the length.
@@ -128,7 +130,7 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 		}
 		
 		@SuppressWarnings("unchecked")
-		AbstractNode<K, V> nodes[] = new AbstractNode[length];
+		Node<K, V> nodes[] = new Node[length];
 		
 		int pos = 0;
 		for (int i = 0; i < array.length; i++) {
@@ -144,7 +146,7 @@ public class InnerNodeChecker<K extends Comparable<K>, V> extends
 	 */
 	@Override
 	public K getLastKey() {
-		AbstractNode<K, V> lastChild =
+		Node<K, V> lastChild =
 			((InnerNode<K, V>) node).getChild(node.getSlots());
 		AbstractNodeChecker<K, V> nodeChecker =
 			AbstractNodeChecker.getNodeChecker(lastChild);

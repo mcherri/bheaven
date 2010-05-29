@@ -26,32 +26,38 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import cherri.bheaven.bplustree.memory.MemoryInnerNode;
+import cherri.bheaven.bplustree.memory.MemoryLeafNode;
+import cherri.bheaven.bplustree.memory.MemoryNodeFactory;
+
 
 /**
  *
  */
 public class BPlusTreeCheckerTest {
 	
-	private LeafNode<String, String> root1;
-	private InnerNode<String, String> root2;
-	private InnerNode<String, String> root3;
+	private MemoryLeafNode<String, String> root1;
+	private MemoryInnerNode<String, String> root2;
+	private MemoryInnerNode<String, String> root3;
 	private BPlusTreeChecker<String, String> checker;
 	
 	@Before
 	public void setUp() {
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(4, 5);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(4, 5);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 		checker = new BPlusTreeChecker<String, String>(tree);
 		
-		root1 = new LeafNode<String, String>(
+		root1 = new MemoryLeafNode<String, String>(
 				10, null);
 		Utils.generateStrings(root1, 5, "a");
 		Utils.generateValueStrings(root1, 5, "va");
 		
-		root2 = new InnerNode<String, String>(3);
+		root2 = new MemoryInnerNode<String, String>(3);
 		Utils.setLeafNodes(root2, 4, 2, "a", "va");
 		Utils.setChildrenKeys(root2, 2);
 		
-		root3 = new InnerNode<String, String>(4); 
+		root3 = new MemoryInnerNode<String, String>(4); 
 		Utils.setInnerNodes(root3, 5, 3);
 		Utils.setChildrenKeys(root3, 3);
 		
@@ -72,10 +78,10 @@ public class BPlusTreeCheckerTest {
 		
 		assertThat("", checker.checkTreeIsBalanced(), is(true));
 		
-		InnerNode<String, String> child = new InnerNode<String, String>(1);
+		MemoryInnerNode<String, String> child = new MemoryInnerNode<String, String>(1);
 		child.setKey("k1", 0);
 		for (int i = 0; i < 2; i ++) {
-			child.setChild(new LeafNode<String, String>(0, null), i);
+			child.setChild(new MemoryLeafNode<String, String>(0, null), i);
 		}
 		((InnerNode<String, String>) ((InnerNode<String, String>) root3.getChild(0))).setChild(child, 1);
 
@@ -96,8 +102,8 @@ public class BPlusTreeCheckerTest {
 		
 		assertThat("", checker.checkInternalNodesChildrenCount(), is(true));
 		
-		InnerNode<String, String> node =
-			(InnerNode<String, String>) root3.getChild(0);
+		MemoryInnerNode<String, String> node =
+			(MemoryInnerNode<String, String>) root3.getChild(0);
 		node.setChild(null, 2);
 		node.setSlots(1);
 		
@@ -186,7 +192,7 @@ public class BPlusTreeCheckerTest {
 		
 		assertThat("", checker.checkLeafNodesLinksOrder(), is(true));
 		
-		AbstractNode<String, String> temp = root3.getChild(0);
+		Node<String, String> temp = root3.getChild(0);
 		root3.setChild(root3.getChild(1), 0);
 		root3.setChild(temp, 1);
 		

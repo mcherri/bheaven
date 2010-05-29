@@ -19,12 +19,14 @@
  */
 package cherri.bheaven.bplustree;
 
+import cherri.bheaven.bplustree.memory.MemoryInnerNode;
+
 /**
  *
  */
 public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	
-	private final AbstractNode<K, V> root;
+	private final Node<K, V> root;
 	
 	/**
 	 * @param tree
@@ -55,7 +57,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 		}
 		
 		boolean result = true;
-		if(root instanceof InnerNode<?, ?>) {
+		if(root instanceof MemoryInnerNode<?, ?>) {
 			for (int i = 0; result && i < root.getSlots() + 1; i++) {
 				AbstractNodeChecker<K, V> nodeChecker =
 					AbstractNodeChecker.getNodeChecker(
@@ -88,7 +90,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 		 * of its non-empty children according to our node structure. The
 		 * remaining thing to check it the last node key value.
 		 */  
-		if(root instanceof InnerNode<?, ?>) {
+		if(root instanceof MemoryInnerNode<?, ?>) {
 			return ((InnerNodeChecker<K, V>) AbstractNodeChecker.getNodeChecker(root)).checkLastKey();
 		}
 		return true;
@@ -124,7 +126,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 			return true;
 		}
 		
-		AbstractNode<K, V> nodes[] = AbstractNodeChecker.getNodeChecker(root).getLeafNodes();
+		Node<K, V> nodes[] = AbstractNodeChecker.getNodeChecker(root).getLeafNodes();
 		
 		for (int i = 0; i < nodes.length - 1; i++) {
 			LeafNode<K, V> node = (LeafNode<K, V>) nodes[i]; 

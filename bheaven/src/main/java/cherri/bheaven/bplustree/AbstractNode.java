@@ -25,7 +25,7 @@ import java.util.Arrays;
 /**
  *
  */
-public abstract class AbstractNode<K extends Comparable<K>, V> /*implements Comparable<Node<K, V>>*/ {
+public abstract class AbstractNode<K extends Comparable<K>, V> implements Node<K, V> /*implements Comparable<Node<K, V>>*/ {
 
 	private K keys[];
 	private int slots;
@@ -39,15 +39,15 @@ public abstract class AbstractNode<K extends Comparable<K>, V> /*implements Comp
 		slots = 0;
 	}
 
-	/**
-	 * @return the key
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.Node#getKey(int)
 	 */
 	public K getKey(int index) {
 		return keys[index];
 	}
 
-	/**
-	 * @param key the key to set
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.Node#setKey(K, int)
 	 */
 	public void setKey(K key, int index) {
 		keys[index] = key;
@@ -57,20 +57,23 @@ public abstract class AbstractNode<K extends Comparable<K>, V> /*implements Comp
 		return Arrays.binarySearch(keys, 0, slots, key, null);
 	}
 
-	/**
-	 * @return the slots
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.Node#getSlots()
 	 */
 	public int getSlots() {
 		return slots;
 	}
 
-	/**
-	 * @param slots the slots to set
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.Node#setSlots(int)
 	 */
 	public void setSlots(int slots) {
 		this.slots = slots;
 	}
 	
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.Node#getMaxSlots()
+	 */
 	public int getMaxSlots() {
 		return keys.length;
 	}
@@ -94,18 +97,6 @@ public abstract class AbstractNode<K extends Comparable<K>, V> /*implements Comp
 		}
 	}
 
-	public abstract boolean hasEnoughSlots();
-	
-	public abstract boolean canGiveSlots();
-	
-	public abstract void leftShift(int count);
-	
-	public abstract void rightShift(int count);
-	
-	public abstract void copyToLeft(AbstractNode<K,V> node, int count);
-	
-	public abstract void copyToRight(AbstractNode<K,V> node, int count);
-	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

@@ -19,6 +19,9 @@
  */
 package cherri.bheaven.bplustree;
 
+import cherri.bheaven.bplustree.memory.MemoryInnerNode;
+import cherri.bheaven.bplustree.memory.MemoryLeafNode;
+
 /**
  *
  */
@@ -27,10 +30,10 @@ public class Utils {
 	public static void setInnerNodes(
 			InnerNode<String, String> parent, int size, int slots) {
 		
-		AbstractNode<String, String> next = null;
+		Node<String, String> next = null;
 		
 		for (int i = slots - 1; i >= 0; i--) {
-			InnerNode<String, String> node = new InnerNode<String, String>(size);
+			MemoryInnerNode<String, String> node = new MemoryInnerNode<String, String>(size);
 			setLeafNodes(node,
 					size, slots, String.valueOf((char) ('a' + i)), "v"
 							+ ((char) ('a' + i)));
@@ -45,7 +48,7 @@ public class Utils {
 		
 	}
 
-	public static void setChildrenKeys(InnerNode<String, String> node,
+	public static void setChildrenKeys(MemoryInnerNode<String, String> node,
 			int slots) {
 		for (int j = 0; j < slots - 1; j++) {
 	
@@ -58,11 +61,11 @@ public class Utils {
 			InnerNode<String, String> parent, int size, int slots,
 			String key, String value) {
 		
-		AbstractNode<String, String> next = null;
+		Node<String, String> next = null;
 		
 		for (int i = slots - 1; i >= 0; i--) {
-			AbstractNode<String, String> node =
-				new LeafNode<String, String>(size * 2, next);
+			Node<String, String> node =
+				new MemoryLeafNode<String, String>(size * 2, next);
 			generateStrings(node, slots * 2, key + i);
 			generateValueStrings((LeafNode<String, String>) node,
 					slots * 2, value + i);
@@ -72,7 +75,7 @@ public class Utils {
 		
 	}
 
-	public static void generateStrings(AbstractNode<String, String> node,
+	public static void generateStrings(Node<String, String> node,
 			int slots, String prefix) {
 		
 		for (int i = 0; i < slots; i++) {

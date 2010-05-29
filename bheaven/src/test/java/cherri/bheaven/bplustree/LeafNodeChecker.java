@@ -19,6 +19,8 @@
  */
 package cherri.bheaven.bplustree;
 
+import cherri.bheaven.bplustree.memory.MemoryLeafNode;
+
 /**
  *
  */
@@ -28,7 +30,7 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	/**
 	 * @param node
 	 */
-	LeafNodeChecker(LeafNode<K, V> node) {
+	LeafNodeChecker(MemoryLeafNode<K, V> node) {
 		super(node);
 	}
 
@@ -77,8 +79,8 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public AbstractNode<K, V>[] getLeafNodes() {
-		return new AbstractNode[] { node };
+	public Node<K, V>[] getLeafNodes() {
+		return new Node[] { node };
 	}
 
 	/* (non-Javadoc)

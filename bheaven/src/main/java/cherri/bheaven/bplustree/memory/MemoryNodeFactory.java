@@ -17,30 +17,38 @@
  * License along with bheaven.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package cherri.bheaven.bplustree;
+package cherri.bheaven.bplustree.memory;
+
+import cherri.bheaven.bplustree.InnerNode;
+import cherri.bheaven.bplustree.LeafNode;
+import cherri.bheaven.bplustree.NodeFactory;
 
 /**
  *
  */
-public class Breadcrumb<K extends Comparable<K>, V> {
-	private final Node<K, V> node;
-	private final int index;
-	
-	public Breadcrumb(Node<K, V> node, int index) {
-		this.node = node;
-		this.index = index;
-	}
+public class MemoryNodeFactory<K extends Comparable<K>, V> implements NodeFactory<K, V> {
+
+	private final int order;
+	private final int records;
 	
 	/**
-	 * @return the node
+	 * @param order the order of the B+ Tree
+	 * @param records TODO
 	 */
-	public Node<K, V> getNode() {
-		return node;
+	public MemoryNodeFactory(int order, int records) {
+		this.order = order;
+		this.records = records;
 	}
-	/**
-	 * @return the index
-	 */
-	public int getIndex() {
-		return index;
+
+	@Override
+	public InnerNode<K, V> getInnerNode() {
+		return new MemoryInnerNode<K, V>(order - 1);
 	}
+
+	@Override
+	public LeafNode<K, V> getLeafNode() {
+		return new MemoryLeafNode<K, V>(records, null);
+	}
+	
+
 }

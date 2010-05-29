@@ -28,31 +28,37 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import cherri.bheaven.bplustree.memory.MemoryInnerNode;
+import cherri.bheaven.bplustree.memory.MemoryLeafNode;
+import cherri.bheaven.bplustree.memory.MemoryNodeFactory;
+
 public class BPlusTreeTest {
 	
 	private static final String KEY = "key";
 	private static final String VALUE = "value";
 	private static final String B_TREE_SHOULD_RETURN = "B+ Tree should return \"";
 	private static final String B_TREE_SHOULD_RETURN_REST = "\".";
-	private LeafNode<String, String> root1;
-	private InnerNode<String, String> root2;
-	private InnerNode<String, String> root3;
+	private MemoryLeafNode<String, String> root1;
+	private MemoryInnerNode<String, String> root2;
+	private MemoryInnerNode<String, String> root3;
 	private BPlusTree<String, String> tree1;
 	
 	@Before
 	public void setUp() {
-		tree1 = new BPlusTree<String, String>(4, 5);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(4, 5);
+		tree1 = new BPlusTree<String, String>(factory);
 		
-		root1 = new LeafNode<String, String>(
+		root1 = new MemoryLeafNode<String, String>(
 					10, null);
 		Utils.generateStrings(root1, 5, "a");
 		Utils.generateValueStrings(root1, 5, "va");
 		
-		root2 = new InnerNode<String, String>(3);
+		root2 = new MemoryInnerNode<String, String>(3);
 		Utils.setLeafNodes(root2, 4, 2, "a", "va");
 		Utils.setChildrenKeys(root2, 2);
 		
-		root3 = new InnerNode<String, String>(4); 
+		root3 = new MemoryInnerNode<String, String>(4); 
 		Utils.setInnerNodes(root3, 5, 3);
 		Utils.setChildrenKeys(root3, 3);
 		
@@ -74,7 +80,9 @@ public class BPlusTreeTest {
 	
 	@Test
 	public void bPlusTreeShouldReturnNullWhenGettingANonExistantKey() {
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(4, 5);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(4, 5);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 		
 		assertThat("B+ Tree should return null when getting non exsistant key.",
 				tree.get("test"), is(nullValue()));
@@ -124,7 +132,9 @@ public class BPlusTreeTest {
 		
 		assertThatTreeIsValid(tree1);
 
-		BPlusTree<String, String> tree2 = new BPlusTree<String, String>(4, 5);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(4, 5);
+		BPlusTree<String, String> tree2 = new BPlusTree<String, String>(factory);
 		
 		tree2.put(KEY, VALUE);
 		
@@ -136,18 +146,20 @@ public class BPlusTreeTest {
 	
 	@Test
 	public void insertingInAnEmtpyBPlusTreeShouldInitateTheRootNode() {
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(5, 6);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(5, 6);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 		
 		tree.put(KEY, VALUE);
 		
 		@SuppressWarnings("unchecked")
-		AbstractNode<String, String> node =
-			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		Node<String, String> node =
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Inserting in an empty B+ tree should initiate the root node" +
 				" as a leaf node.",
-				node, is(instanceOf(LeafNode.class)));
+				node, is(instanceOf(MemoryLeafNode.class)));
 		
 		assertThatTreeIsValid(tree);
 	}
@@ -155,8 +167,8 @@ public class BPlusTreeTest {
 	@SuppressWarnings("unchecked")
 	private void assertThatValuesCountIs(BPlusTree<String, String> tree,
 			int count) {
-		AbstractNode<String, String> node =
-			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		Node<String, String> node =
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 
 		assertThat("Tree has an incorrect values count.",
 				AbstractNodeChecker.getNodeChecker(node).getValuesCount(), is(count));
@@ -204,7 +216,7 @@ public class BPlusTreeTest {
 	@SuppressWarnings("unchecked")
 	private void assertThatSplitOccured(String message,
 			BPlusTree<String, String> tree, int count, int depth) {
-		AbstractNode<String, String> node = (AbstractNode<String, String>) ReflectionTestUtils
+		Node<String, String> node = (Node<String, String>) ReflectionTestUtils
 				.getField(tree, Constants.ROOT);
 		
 		assertThat(message, node
@@ -212,7 +224,7 @@ public class BPlusTreeTest {
 		
 		int treeDepth = 0;
 		
-		while (node instanceof InnerNode<?, ?>) {
+		while (node instanceof MemoryInnerNode<?, ?>) {
 			node = ((InnerNode<String, String>) node).getChild(0);
 			treeDepth++;
 		}
@@ -222,13 +234,15 @@ public class BPlusTreeTest {
 
 	private void fillAndTest(String message, int count,
 			int forwardSplit, int reverseSplit, int depth) {
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(4, 4);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(4, 4);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 
 		forwardFill(tree, count);
 
 		assertThatSplitOccured(message, tree, forwardSplit, depth);
 
-		tree = new BPlusTree<String, String>(4, 4);
+		tree = new BPlusTree<String, String>(factory);
 
 		reverseFill(tree, count);
 
@@ -238,14 +252,16 @@ public class BPlusTreeTest {
 	private void fillEmptyAndTest(String message, int order, int fillCount,
 			int emptyCount, int forwardSplit, int reverseSplit,
 			int forwardDepth, int reverseDepth) {
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(order, order);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(order, order);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 
 		forwardFill(tree, fillCount);
 		forwardEmpty(tree, emptyCount);
 		
 		assertThatSplitOccured(message, tree, forwardSplit, forwardDepth);
 		
-		tree = new BPlusTree<String, String>(order, order);
+		tree = new BPlusTree<String, String>(factory);
 
 		reverseFill(tree, fillCount);
 		reverseEmpty(tree, emptyCount);
@@ -276,21 +292,25 @@ public class BPlusTreeTest {
 		fillAndTest("Inserting in a full root inner node should split it.", 49,
 				2, 4, 3);
 		
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(4, 4);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(4, 4);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 
 		forwardFill(tree, 49);
 	}
 	
 	@Test
 	public void deletingTheLastBPlusTreeElementShouldNullTheRootNode() {
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(5, 6);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(5, 6);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 		
 		tree.put(KEY, VALUE);
 		tree.remove(KEY);
 		
 		@SuppressWarnings("unchecked")
-		AbstractNode<String, String> node =
-			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		Node<String, String> node =
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Deleting the last element from B+ tree should null the root" +
@@ -337,7 +357,9 @@ public class BPlusTreeTest {
 	
 	@Test
 	public void insertingAndDeletingSameKeysShouldGiveEmptyTree() {
-		BPlusTree<String, String> tree = new BPlusTree<String, String>(5, 6);
+		NodeFactory<String, String> factory =
+			new MemoryNodeFactory<String, String>(5, 6);
+		BPlusTree<String, String> tree = new BPlusTree<String, String>(factory);
 		
 		for (int i = 0; i < 200 ; i++) {
 			tree.put(KEY, VALUE);
@@ -348,8 +370,8 @@ public class BPlusTreeTest {
 		}
 		
 		@SuppressWarnings("unchecked")
-		AbstractNode<String, String> node =
-			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		Node<String, String> node =
+			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Inserting and Deleting the same keys should give a valid " +

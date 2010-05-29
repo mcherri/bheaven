@@ -17,39 +17,46 @@
  * License along with bheaven.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package cherri.bheaven.bplustree;
+package cherri.bheaven.bplustree.memory;
+
+import cherri.bheaven.bplustree.AbstractNode;
+import cherri.bheaven.bplustree.InnerNode;
+import cherri.bheaven.bplustree.Node;
 
 /**
  *
  */
-public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
-	private AbstractNode<K, V> children[];
+public class MemoryInnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> implements InnerNode<K, V> {
+	private Node<K, V> children[];
 	
 	/**
 	 * @param maxSlots
 	 */
 	@SuppressWarnings("unchecked")
-	public InnerNode(int maxSlots) {
+	public MemoryInnerNode(int maxSlots) {
 		super(maxSlots);
 		
 		children = new AbstractNode[maxSlots + 1];
 	}
 
-	/**
-	 * @return the child
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.InnerNode#getChild(int)
 	 */
-	public AbstractNode<K, V> getChild(int index) {
+	public Node<K, V> getChild(int index) {
 		return children[index];
 	}
 
-	/**
-	 * @param child the child to set
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.InnerNode#setChild(cherri.bheaven.bplustree.Node, int)
 	 */
-	public void setChild(AbstractNode<K, V> child, int index) {
+	public void setChild(Node<K, V> child, int index) {
 		children[index] = child;
 	}
 	
-	public void insert(K key, AbstractNode<K, V> child) {
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.InnerNode#insert(K, cherri.bheaven.bplustree.AbstractNode)
+	 */
+	public void insert(K key, Node<K, V> child) {
 		
 		int index = getSlots() - 1;
 		
@@ -66,12 +73,48 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 		setSlots(getSlots() + 1);
 	}
 	
-	public InnerNode<K, V> split() {
+	private InnerNode<K, V> split() {
 		checkIsFull();
 		
-		return new InnerNode<K, V>(getMaxSlots());
+		return new MemoryInnerNode<K, V>(getMaxSlots());
 	}
 	
+	/*
+	 * A very complex method needs documentation. It is used in insertion.
+	 */
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.InnerNode#split(K, cherri.bheaven.bplustree.AbstractNode)
+	 */
+	public InnerNode<K, V> split(K key, Node<K, V> newNode) {
+		InnerNode<K, V> newInnerNode = split();
+		int count = getSlots() / 2;
+		int right = count - 1;
+		int left = getSlots() - 1;
+		boolean found = false;
+		for (int i = 0; i < count; i++, right--) {
+			if(found || key.compareTo(getKey(left)) < 0) {
+				newInnerNode.setKey(getKey(left), right);
+				newInnerNode.setChild(getChild(left + 1), right + 1);
+				left--;
+			} else {
+				newInnerNode.setKey(key, right);
+				newInnerNode.setChild(newNode, right + 1);
+				found = true;
+			}
+		}
+		setSlots(getSlots() - count + (found ? 1 : 0));
+		newInnerNode.setSlots(count);
+		if (!found) {
+			insert(key, newNode);
+		}
+		setSlots(getSlots() - 1);
+		newInnerNode.setChild(getChild(getSlots() + 1), 0);
+		return newInnerNode;
+	}
+
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.InnerNode#remove(int)
+	 */
 	public void remove(int index) {
 		
 		for (int i = index; i < getSlots(); i++) {
@@ -132,7 +175,7 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToLeft(int)
 	 */
 	@Override
-	public void copyToLeft(AbstractNode<K,V> node, int count) {
+	public void copyToLeft(Node<K, V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			if(i < getSlots()) {
 				node.setKey(getKey(i), node.getSlots() + i + 1);
@@ -145,7 +188,7 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToRight(int)
 	 */
 	@Override
-	public void copyToRight(AbstractNode<K,V> node, int count) {
+	public void copyToRight(Node<K, V> node, int count) {
 		for (int i = 0; i < count - 1; i++) {
 			node.setKey(getKey(getSlots() - count + i + 1), i);
 			((InnerNode<K, V>) node).setChild(getChild(getSlots() - count + i + 2), i + 1);
@@ -172,7 +215,7 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 			if(i > 0) {
 				buffer.append('\n');
 			}
-			buffer.append(children[i].toString(level + 1));
+			buffer.append(((AbstractNode<K, V>) children[i]).toString(level + 1));
 		}
 
 		return buffer.toString();

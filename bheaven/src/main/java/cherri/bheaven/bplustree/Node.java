@@ -19,28 +19,47 @@
  */
 package cherri.bheaven.bplustree;
 
-/**
- *
- */
-public class Breadcrumb<K extends Comparable<K>, V> {
-	private final Node<K, V> node;
-	private final int index;
-	
-	public Breadcrumb(Node<K, V> node, int index) {
-		this.node = node;
-		this.index = index;
-	}
-	
+public interface Node<K extends Comparable<K>, V> {
+
 	/**
-	 * @return the node
+	 * @return the key
 	 */
-	public Node<K, V> getNode() {
-		return node;
-	}
+	K getKey(int index);
+
 	/**
-	 * @return the index
+	 * @param key the key to set
 	 */
-	public int getIndex() {
-		return index;
-	}
+	void setKey(K key, int index);
+
+	/**
+	 * @return the slots
+	 */
+	int getSlots();
+
+	/**
+	 * @param slots the slots to set
+	 */
+	void setSlots(int slots);
+
+	int getMaxSlots();
+	
+	boolean isEmpty();
+	
+	boolean isFull();
+	
+	boolean hasEnoughSlots();
+		
+	int getKeyIndex(K key);
+	
+	boolean canGiveSlots();
+
+	void leftShift(int count);
+	
+	void rightShift(int count);
+	
+	void copyToLeft(Node<K, V> node, int count);
+	
+	void copyToRight(Node<K, V> node, int count);
+	
+
 }

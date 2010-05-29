@@ -17,12 +17,16 @@
  * License along with bheaven.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package cherri.bheaven.bplustree; 
+package cherri.bheaven.bplustree.memory; 
+
+import cherri.bheaven.bplustree.AbstractNode;
+import cherri.bheaven.bplustree.LeafNode;
+import cherri.bheaven.bplustree.Node;
 
 
-public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
+public class MemoryLeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> implements LeafNode<K, V> {
 	private V values[];
-	private AbstractNode<K, V> next;
+	private Node<K, V> next;
 	/*private LeafNode<K, V> previous;*/
 	
 	/**
@@ -31,42 +35,45 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	 * @param next
 	 */
 	@SuppressWarnings("unchecked")
-	public LeafNode(int maxSlots, AbstractNode<K, V> next) {
+	public MemoryLeafNode(int maxSlots, Node<K, V> next) {
 		super(maxSlots);
 
 		values = (V[]) new Object[maxSlots];
 		this.next = next;
 	}
 	
-	/**
-	 * @return the value
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.LeafNode#getValue(int)
 	 */
 	public V getValue(int index) {
 		return values[index];
 	}
 	
-	/**
-	 * @param value the value to set
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.LeafNode#setValue(V, int)
 	 */
 	public void setValue(V value, int index) {
 		values[index] = value;
 	}
 
-	/**
-	 * @return the next
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.LeafNode#getNext()
 	 */
-	public AbstractNode<K, V> getNext() {
+	public Node<K, V> getNext() {
 		return next;
 	}
 
-	/**
-	 * @param next the next to set
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.LeafNode#setNext(cherri.bheaven.bplustree.Node)
 	 */
-	public void setNext(AbstractNode<K, V> next) {
+	public void setNext(Node<K, V> next) {
 		this.next = next;
 	}
 	
 	
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.LeafNode#insert(K, V)
+	 */
 	public void insert(K key, V value) {
 		
 		int index = getSlots() - 1;
@@ -84,12 +91,48 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 		setSlots(getSlots() + 1);
 	}
 	
-	public LeafNode<K, V> split() {
+	private LeafNode<K, V> split() {
 		checkIsFull();
 		
-		return new LeafNode<K, V>(getMaxSlots(), next);
+		return new MemoryLeafNode<K, V>(getMaxSlots(), next);
 	}
 	
+	/*
+	 * A very complex method needs documentation. It is used in insertion.
+	 */
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.LeafNode#split(K, V)
+	 */
+	public LeafNode<K, V> split(K key, V value) {
+		LeafNode<K, V> newLeafNode = split();
+		int count = (getSlots() + 1) / 2;
+		int right = count - 1;
+		int left = getSlots() - 1;
+		boolean found = false;
+		for (int i = 0; i < count; i++, right--) {
+			if(found || key.compareTo(getKey(left)) < 0) {
+				newLeafNode.setKey(getKey(left), right);
+				newLeafNode.setValue(getValue(left), right);
+				left--;
+			} else {
+				newLeafNode.setKey(key, right);
+				newLeafNode.setValue(value, right);
+				found = true;
+			}
+		}
+		setSlots(getSlots() - count + (found ? 1 : 0));
+		newLeafNode.setSlots(count);
+		if (!found) {
+			insert(key, value);
+		}
+		setNext(newLeafNode);
+		return newLeafNode;
+	}
+
+	
+	/* (non-Javadoc)
+	 * @see cherri.bheaven.bplustree.LeafNode#remove(int)
+	 */
 	public void remove(int index) {
 		
 		for (int i = index; i < getSlots() - 1; i++) {
@@ -142,7 +185,7 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToLeft(int)
 	 */
 	@Override
-	public void copyToLeft(AbstractNode<K,V> node, int count) {
+	public void copyToLeft(Node<K, V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			node.setKey(getKey(i), node.getSlots() + i);
 			((LeafNode<K, V>) node).setValue(getValue(i), node.getSlots() + i);
@@ -153,7 +196,7 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToRight(int)
 	 */
 	@Override
-	public void copyToRight(AbstractNode<K,V> node, int count) {
+	public void copyToRight(Node<K, V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			node.setKey(getKey(getSlots() - count + i), i);
 			((LeafNode<K, V>) node).setValue(getValue(getSlots() - count + i), i);

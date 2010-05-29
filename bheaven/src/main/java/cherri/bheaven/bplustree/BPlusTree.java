@@ -29,17 +29,15 @@ import java.util.List;
  */
 public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map<K, V>*/ {
 	
-	private AbstractNode<K, V> root;
-	private final int order;
-	private final int records;
+	private Node<K, V> root;
+	private NodeFactory<K, V> factory;
 
 	/**
 	 * @param order the order of the B+ Tree
 	 * @param records TODO
 	 */
-	public BPlusTree(int order, int records) {
-		this.order = order;
-		this.records = records;
+	public BPlusTree(NodeFactory<K, V> factory) {
+		this.factory = factory;
 	}
 	
 	private LeafNode<K, V> findLeafNode(K key) {
@@ -52,7 +50,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			return null;
 		}
 		
-		AbstractNode<K, V> node = root;
+		Node<K, V> node = root;
 		breadcrumbAdd(breadcrumbList, node, -1);
 		
 		while (!(node instanceof LeafNode<?, ?>)) {
@@ -73,13 +71,13 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	}
 
 	private void breadcrumbAdd(List<Breadcrumb<K, V>> breadcrumbList,
-			AbstractNode<K, V> node, int index) {
+			Node<K, V> node, int index) {
 		if(breadcrumbList != null) {
 			breadcrumbList.add(new Breadcrumb<K, V>(node, index));
 		}
 	}
 	
-	private AbstractNode<K, V> getParent(List<Breadcrumb<K, V>> breadcrumbList,
+	private Node<K, V> getParent(List<Breadcrumb<K, V>> breadcrumbList,
 			int position) {
 		if (position <= 0) {
 			return null;
@@ -133,7 +131,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	
 	public void put(K key, V value) {
 		if (root == null) {
-			root = new LeafNode<K, V>(records, null);
+			root = factory.getLeafNode();
 		}
 		
 		/*
@@ -145,7 +143,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		List<Breadcrumb<K, V>> breadcrumbList =
 			new ArrayList<Breadcrumb<K, V>>(10);
 		LeafNode<K, V> leafNode = findLeafNode(key, breadcrumbList);
-		AbstractNode<K, V> node = leafNode;
+		Node<K, V> node = leafNode;
 		int position = breadcrumbList.size() - 1;
 
 		/*
@@ -169,11 +167,11 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	              split of a leaf node.
 	        */
 			K newKey = key;
-			LeafNode<K, V> newLeafNode = split(leafNode, newKey, value);
+			LeafNode<K, V> newLeafNode = leafNode.split(newKey, value);
 			
 			InnerNode<K, V> parent = 
 				(InnerNode<K, V>) getParent(breadcrumbList, position--);
-			AbstractNode<K, V> newNode = newLeafNode;
+			Node<K, V> newNode = newLeafNode;
 			newKey = node.getKey(node.getSlots() - 1);
 			
 			/*
@@ -190,7 +188,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
                continue upwards on the tree.
 			*/
 			while (parent != null && parent.isFull()) {
-				InnerNode<K, V> newInnerNode = split(parent, newKey, newNode);
+				InnerNode<K, V> newInnerNode = parent.split(newKey, newNode);
 				newKey = parent.getKey(parent.getSlots());
 				node = parent;
 				newNode = newInnerNode;
@@ -206,7 +204,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
                from the leaf to the root. 
             */
 			if (parent == null) {
-				parent = new InnerNode<K, V>(order - 1);
+				parent = factory.getInnerNode();
 				parent.setChild(node, 0);
 				root = parent;
 			}
@@ -215,67 +213,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		}
 	}
 
-	/*
-	 * A very complex method needs documentation. It is used in insertion.
-	 */
-	private InnerNode<K, V> split(InnerNode<K, V> parent, K key,
-			AbstractNode<K, V> newNode) {
-		InnerNode<K, V> newInnerNode = parent.split();
-		int count = parent.getSlots() / 2;
-		int right = count - 1;
-		int left = parent.getSlots() - 1;
-		boolean found = false;
-		for (int i = 0; i < count; i++, right--) {
-			if(found || key.compareTo(parent.getKey(left)) < 0) {
-				newInnerNode.setKey(parent.getKey(left), right);
-				newInnerNode.setChild(parent.getChild(left + 1), right + 1);
-				left--;
-			} else {
-				newInnerNode.setKey(key, right);
-				newInnerNode.setChild(newNode, right + 1);
-				found = true;
-			}
-		}
-		parent.setSlots(parent.getSlots() - count + (found ? 1 : 0));
-		newInnerNode.setSlots(count);
-		if (!found) {
-			parent.insert(key, newNode);
-		}
-		parent.setSlots(parent.getSlots() - 1);
-		newInnerNode.setChild(parent.getChild(parent.getSlots() + 1), 0);
-		return newInnerNode;
-	}
-
-	/*
-	 * A very complex method needs documentation. It is used in insertion.
-	 */
-	private LeafNode<K, V> split(LeafNode<K, V> node, K key, V value) {
-		LeafNode<K, V> newLeafNode = node.split();
-		int count = (node.getSlots() + 1) / 2;
-		int right = count - 1;
-		int left = node.getSlots() - 1;
-		boolean found = false;
-		for (int i = 0; i < count; i++, right--) {
-			if(found || key.compareTo(node.getKey(left)) < 0) {
-				newLeafNode.setKey(node.getKey(left), right);
-				newLeafNode.setValue(node.getValue(left), right);
-				left--;
-			} else {
-				newLeafNode.setKey(key, right);
-				newLeafNode.setValue(value, right);
-				found = true;
-			}
-		}
-		node.setSlots(node.getSlots() - count + (found ? 1 : 0));
-		newLeafNode.setSlots(count);
-		if (!found) {
-			node.insert(key, value);
-		}
-		node.setNext(newLeafNode);
-		return newLeafNode;
-	}
-	
-	private AbstractNode<K, V>[] getSiblings(List<Breadcrumb<K, V>> breadcrumbList,
+	private Node<K, V>[] getSiblings(List<Breadcrumb<K, V>> breadcrumbList,
 			int position) {
 		InnerNode<K, V> parent =
 			(InnerNode<K, V>) getParent(breadcrumbList, position);
@@ -286,7 +224,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		checkIndex(index);
 		
 		@SuppressWarnings("unchecked")
-		AbstractNode<K, V> results[] = new AbstractNode[2];
+		Node<K, V> results[] = new Node[2];
 		
 		if (index > 0) {
 			results[0] = parent.getChild(index - 1);
@@ -305,7 +243,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		}
 	}
 	
-	private void updateLeafParentKey(AbstractNode<K, V> node, int nodeIndex,
+	private void updateLeafParentKey(Node<K, V> node, int nodeIndex,
 			List<Breadcrumb<K, V>> breadcrumbList, int position) {
 		InnerNode<K, V> parent = 
 			(InnerNode<K, V>) getParent(breadcrumbList, position);
@@ -344,7 +282,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	private LeafNode<K, V> getPreviousLeafNode(LeafNode<K, V> leafNode,
 			List<Breadcrumb<K, V>> breadcrumbList, int position) {
 		LeafNode<K, V> result = null;
-		AbstractNode<K, V> node = leafNode;
+		Node<K, V> node = leafNode;
 		
 		InnerNode<K, V> parent = null;
 		int index = -1;
@@ -390,7 +328,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			
 			if (parent != root) {
 				if (!parent.hasEnoughSlots()) {
-					AbstractNode<K, V> siblings[] =
+					Node<K, V> siblings[] =
 						getSiblings(breadcrumbList, position - 1);
 					int siblingIndex = getSiblingIndex(siblings);
 					
@@ -497,7 +435,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			      we inspect the two sibling leaf nodes Lleft and Lright adjacent
 			      to L -- at most one of these may not exist.
 			*/
-				AbstractNode<K, V> siblings[] =
+				Node<K, V> siblings[] =
 					getSiblings(breadcrumbList, position);
 				int siblingIndex = getSiblingIndex(siblings);
 				
@@ -545,7 +483,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 							previousLeafNode.setNext(leafNode.getNext());
 						}
 					} else {
-						((LeafNode<K,V>) siblings[0]).setNext(leafNode.getNext());
+						((LeafNode<K, V>) siblings[0]).setNext(leafNode.getNext());
 					}
 					removeParentKey(breadcrumbList, position);
 				}
@@ -562,7 +500,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		}
 	}
 
-	private boolean canGiveSlots(AbstractNode<K, V>[] siblings) {
+	private boolean canGiveSlots(Node<K, V>[] siblings) {
 		boolean found = false;
 		// TODO optimize
 		if (siblings[0] == null) {
@@ -585,7 +523,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		return found;
 	}
 	
-	private int getSiblingIndex(AbstractNode<K, V> siblings[]) {
+	private int getSiblingIndex(Node<K, V> siblings[]) {
 		if (siblings[0] == null) {
 			return 1;
 		} else if (siblings[1] == null) {
@@ -601,7 +539,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	/*
 	 * Used in unit testing only
 	 */
-	AbstractNode<K, V> getRoot() {
+	Node<K, V> getRoot() {
 		return root;
 	}
 }
