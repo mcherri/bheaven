@@ -20,7 +20,6 @@
 package cherri.bheaven.bplustree;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -30,7 +29,7 @@ import java.util.List;
  */
 public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map<K, V>*/ {
 	
-	private Node<K, V> root;
+	private AbstractNode<K, V> root;
 	private final int order;
 	private final int records;
 
@@ -53,13 +52,12 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			return null;
 		}
 		
-		Node<K, V> node = root;
+		AbstractNode<K, V> node = root;
 		breadcrumbAdd(breadcrumbList, node, -1);
 		
 		while (!(node instanceof LeafNode<?, ?>)) {
 		
-			int index = Arrays.binarySearch(node.getKeys(), 0, node.getSlots(),
-					key, null);
+			int index = node.getKeyIndex(key);
 			
 			if(index < 0) {
 				index = -index - 1;
@@ -75,13 +73,13 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	}
 
 	private void breadcrumbAdd(List<Breadcrumb<K, V>> breadcrumbList,
-			Node<K, V> node, int index) {
+			AbstractNode<K, V> node, int index) {
 		if(breadcrumbList != null) {
 			breadcrumbList.add(new Breadcrumb<K, V>(node, index));
 		}
 	}
 	
-	private Node<K, V> getParent(List<Breadcrumb<K, V>> breadcrumbList,
+	private AbstractNode<K, V> getParent(List<Breadcrumb<K, V>> breadcrumbList,
 			int position) {
 		if (position <= 0) {
 			return null;
@@ -124,8 +122,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			return null;
 		}
 		
-		int index = Arrays.binarySearch(node.getKeys(), 0, node.getSlots(),
-				key, null);
+		int index = node.getKeyIndex(key);
 		
 		if(index >= 0) {
 			return node.getValues()[index];
@@ -137,8 +134,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	@SuppressWarnings("unchecked")
 	public void put(K key, V value) {
 		if (root == null) {
-			root = new LeafNode<K, V>((K[]) new Comparable[records],
-					(V[]) new Object[records], 0, null);
+			root = new LeafNode<K, V>((V[]) new Object[records], records, null);
 		}
 		
 		/*
@@ -150,7 +146,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		List<Breadcrumb<K, V>> breadcrumbList =
 			new ArrayList<Breadcrumb<K, V>>(10);
 		LeafNode<K, V> leafNode = findLeafNode(key, breadcrumbList);
-		Node<K, V> node = leafNode;
+		AbstractNode<K, V> node = leafNode;
 		int position = breadcrumbList.size() - 1;
 
 		/*
@@ -177,9 +173,9 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			LeafNode<K, V> newLeafNode = split(leafNode, newKey, value);
 			
 			InnerNode<K, V> parent = 
-				(InnerNode<K, V>) getParent(breadcrumbList, position--); // node.getParent();
-			Node<K, V> newNode = newLeafNode;
-			newKey = node.getKeys()[node.getSlots() - 1];
+				(InnerNode<K, V>) getParent(breadcrumbList, position--);
+			AbstractNode<K, V> newNode = newLeafNode;
+			newKey = node.getKey(node.getSlots() - 1);
 			
 			/*
             a. If the parent P of L is full, then it is split in turn.
@@ -196,11 +192,10 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			*/
 			while (parent != null && parent.isFull()) {
 				InnerNode<K, V> newInnerNode = split(parent, newKey, newNode);
-				newKey = parent.getKeys()[parent.getSlots()];
+				newKey = parent.getKey(parent.getSlots());
 				node = parent;
 				newNode = newInnerNode;
-				parent = (InnerNode<K, V>) getParent(breadcrumbList, position--); //parent.getParent();
-				//node.setNext(newLeafNode);
+				parent = (InnerNode<K, V>) getParent(breadcrumbList, position--);
 				
 			}
 			
@@ -212,8 +207,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
                from the leaf to the root. 
             */
 			if (parent == null) {
-				parent = new InnerNode<K, V>((K[]) new Comparable[order - 1],
-						new Node[order], 0);
+				parent = new InnerNode<K, V>(new AbstractNode[order], order - 1);
 				parent.getChildren()[0] = node;
 				root = parent;
 			}
@@ -226,19 +220,19 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	 * A very complex method needs documentation. It is used in insertion.
 	 */
 	private InnerNode<K, V> split(InnerNode<K, V> parent, K key,
-			Node<K, V> newNode) {
+			AbstractNode<K, V> newNode) {
 		InnerNode<K, V> newInnerNode = parent.split();
 		int count = parent.getSlots() / 2;
 		int right = count - 1;
 		int left = parent.getSlots() - 1;
 		boolean found = false;
 		for (int i = 0; i < count; i++, right--) {
-			if(found || key.compareTo(parent.getKeys()[left]) < 0) {
-				newInnerNode.getKeys()[right] = parent.getKeys()[left];
+			if(found || key.compareTo(parent.getKey(left)) < 0) {
+				newInnerNode.setKey(parent.getKey(left), right);
 				newInnerNode.getChildren()[right + 1] = parent.getChildren()[left + 1];
 				left--;
 			} else {
-				newInnerNode.getKeys()[right] = key;
+				newInnerNode.setKey(key, right);
 				newInnerNode.getChildren()[right + 1] = newNode;
 				found = true;
 			}
@@ -263,12 +257,12 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		int left = node.getSlots() - 1;
 		boolean found = false;
 		for (int i = 0; i < count; i++, right--) {
-			if(found || key.compareTo(node.getKeys()[left]) < 0) {
-				newLeafNode.getKeys()[right] = node.getKeys()[left];
+			if(found || key.compareTo(node.getKey(left)) < 0) {
+				newLeafNode.setKey(node.getKey(left), right);
 				newLeafNode.getValues()[right] = node.getValues()[left];
 				left--;
 			} else {
-				newLeafNode.getKeys()[right] = key;
+				newLeafNode.setKey(key, right);
 				newLeafNode.getValues()[right] = value;
 				found = true;
 			}
@@ -282,7 +276,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		return newLeafNode;
 	}
 	
-	private Node<K, V>[] getSiblings(List<Breadcrumb<K, V>> breadcrumbList,
+	private AbstractNode<K, V>[] getSiblings(List<Breadcrumb<K, V>> breadcrumbList,
 			int position) {
 		InnerNode<K, V> parent =
 			(InnerNode<K, V>) getParent(breadcrumbList, position);
@@ -293,7 +287,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		checkIndex(index);
 		
 		@SuppressWarnings("unchecked")
-		Node<K, V> results[] = new Node[2];
+		AbstractNode<K, V> results[] = new AbstractNode[2];
 		
 		if (index > 0) {
 			results[0] = parent.getChildren()[index - 1];
@@ -312,7 +306,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		}
 	}
 	
-	private void updateLeafParentKey(Node<K, V> node, int nodeIndex,
+	private void updateLeafParentKey(AbstractNode<K, V> node, int nodeIndex,
 			List<Breadcrumb<K, V>> breadcrumbList, int position) {
 		InnerNode<K, V> parent = 
 			(InnerNode<K, V>) getParent(breadcrumbList, position);
@@ -321,7 +315,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		
 		checkIndex(index);
 		
-		parent.getKeys()[index] =  node.getKeys()[node.getSlots() - 1];
+		parent.setKey(node.getKey(node.getSlots() - 1), index);
 	}
 	
 	private K getParentKey(boolean left, List<Breadcrumb<K, V>> breadcrumbList,
@@ -333,7 +327,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		
 		checkIndex(index);
 		
-		return parent.getKeys()[left ? index - 1 : index];
+		return parent.getKey(left ? index - 1 : index);
 	}
 	
 	private void updateParentKey(int nodeIndex, K key,
@@ -345,22 +339,22 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		
 		checkIndex(index);
 
-		parent.getKeys()[index] = key;
+		parent.setKey(key, index);
 	}
 	
 	private LeafNode<K, V> getPreviousLeafNode(LeafNode<K, V> leafNode,
 			List<Breadcrumb<K, V>> breadcrumbList, int position) {
 		LeafNode<K, V> result = null;
-		Node<K, V> node = leafNode;
+		AbstractNode<K, V> node = leafNode;
 		
 		InnerNode<K, V> parent = null;
 		int index = -1;
 		int loopPosition = position;
 		
 		do {
-			parent  = (InnerNode<K, V>) getParent(breadcrumbList, loopPosition); //node.getParent();
+			parent  = (InnerNode<K, V>) getParent(breadcrumbList, loopPosition);
 			
-			index = getIndex(breadcrumbList, loopPosition); //search(parent.getChildren(), node);
+			index = getIndex(breadcrumbList, loopPosition);
 			
 			checkIndex(index);
 			
@@ -397,7 +391,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			
 			if (parent != root) {
 				if (!parent.hasEnoughSlots()) {
-					Node<K, V> siblings[] =
+					AbstractNode<K, V> siblings[] =
 						getSiblings(breadcrumbList, position - 1);
 					int siblingIndex = getSiblingIndex(siblings);
 					
@@ -406,19 +400,26 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 								parent.getSlots()) / 2;
 						if (siblingIndex == 0) {
 							parent.rightShift(count);
-							parent.getKeys()[count - 1] = getParentKey(true, breadcrumbList, position);
+							parent.setKey(getParentKey(true, breadcrumbList, position), count - 1);
 							siblings[siblingIndex].copyToRight(parent, count);
 						} else {
-							parent.getKeys()[parent.getSlots()] = getParentKey(false, breadcrumbList, position);
+							parent.setKey(getParentKey(false, breadcrumbList, position), parent.getSlots());
 							siblings[siblingIndex].copyToLeft(parent, count);
 							siblings[siblingIndex].leftShift(count);
 						}
 						parent.setSlots(parent.getSlots() + count);
 						siblings[siblingIndex].setSlots(siblings[siblingIndex].getSlots() - count);
-						updateParentKey(siblingIndex == 0 ? -1 : 0,
-								(siblingIndex == 0 ? siblings[0] : parent).getKeys()[(siblingIndex == 0 ? siblings[0] : parent).getSlots()],
-										breadcrumbList,
-										position);
+						if (siblingIndex == 0) {
+							updateParentKey(-1,
+									siblings[0].getKey(siblings[0].getSlots()),
+											breadcrumbList,
+											position);
+						} else {
+							updateParentKey(0,
+									parent.getKey(parent.getSlots()),
+											breadcrumbList,
+											position);
+						}
 					} else {
 				/*
 				         b. If both Lleft and Lright have only the minimum number of
@@ -432,13 +433,15 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 				            leaf node.
 				*/
 						if(siblingIndex == 0) {
-							siblings[siblingIndex].getKeys()[siblings[siblingIndex].getSlots()] =
-								getParentKey(true, breadcrumbList, position);
+							siblings[siblingIndex].setKey(
+									getParentKey(true, breadcrumbList, position),
+									siblings[siblingIndex].getSlots());
 							parent.copyToLeft(siblings[siblingIndex], parent.getSlots() + 1);
 						} else {
 							siblings[siblingIndex].rightShift(siblings[siblingIndex].getSlots());
-							siblings[siblingIndex].getKeys()[parent.getSlots()] =
-								getParentKey(false, breadcrumbList, position);
+							siblings[siblingIndex].setKey(
+									getParentKey(false, breadcrumbList, position),
+									parent.getSlots());
 							parent.copyToRight(siblings[siblingIndex], parent.getSlots() + 1);
 						}
 						siblings[siblingIndex].setSlots(siblings[siblingIndex].getSlots() + parent.getSlots() + 1);
@@ -479,8 +482,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		      removed can be safely deleted from the leaf with no further
 		      action.
 		*/
-		int index = Arrays.binarySearch(leafNode.getKeys(), 0,
-				leafNode.getSlots(), key, null);
+		int index = leafNode.getKeyIndex(key);
 		
 		if (index >= 0) {
 			leafNode.remove(index);
@@ -496,7 +498,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			      we inspect the two sibling leaf nodes Lleft and Lright adjacent
 			      to L -- at most one of these may not exist.
 			*/
-				Node<K, V> siblings[] =
+				AbstractNode<K, V> siblings[] =
 					getSiblings(breadcrumbList, position);
 				int siblingIndex = getSiblingIndex(siblings);
 				
@@ -512,7 +514,11 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 					}
 					leafNode.setSlots(leafNode.getSlots() + count);
 					siblings[siblingIndex].setSlots(siblings[siblingIndex].getSlots() - count);
-					updateLeafParentKey(siblingIndex == 0 ? siblings[0] : leafNode, siblingIndex == 0 ? -1 : 0, breadcrumbList, position);
+					if (siblingIndex == 0) {
+						updateLeafParentKey(siblings[0], -1, breadcrumbList, position);
+					} else {
+						updateLeafParentKey(leafNode, 0, breadcrumbList, position);
+					}
 				} else {
 			/*
 			         b. If both Lleft and Lright have only the minimum number of
@@ -557,7 +563,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		}
 	}
 
-	private boolean canGiveSlots(Node<K, V>[] siblings) {
+	private boolean canGiveSlots(AbstractNode<K, V>[] siblings) {
 		boolean found = false;
 		// TODO optimize
 		if (siblings[0] == null) {
@@ -580,15 +586,15 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		return found;
 	}
 	
-	private int getSiblingIndex(Node<K, V> siblings[]) {
+	private int getSiblingIndex(AbstractNode<K, V> siblings[]) {
 		if (siblings[0] == null) {
-			return 1;//index = 1;
+			return 1;
 		} else if (siblings[1] == null) {
-			return 0;//index = 0;
+			return 0;
 		} else if (siblings[0].getSlots() > siblings[1].getSlots()) {
-			return 0;//index = 0;
+			return 0;
 		} else {
-			return 1;//index = 1;
+			return 1;
 		}
 		
 	}
@@ -596,7 +602,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	/*
 	 * Used in unit testing only
 	 */
-	Node<K, V> getRoot() {
+	AbstractNode<K, V> getRoot() {
 		return root;
 	}
 }

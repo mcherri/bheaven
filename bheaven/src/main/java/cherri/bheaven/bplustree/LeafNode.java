@@ -20,20 +20,19 @@
 package cherri.bheaven.bplustree; 
 
 
-public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
+public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	private V values[];
-	private Node<K, V> next;
+	private AbstractNode<K, V> next;
 	/*private LeafNode<K, V> previous;*/
 	
 	/**
 	 * @param keys
 	 * @param values
 	 * @param slots
-	 * @param parent
 	 * @param next
 	 */
-	public LeafNode(K[] keys, V[] values, int slots, Node<K, V> next) {
-		super(keys, slots);
+	public LeafNode(V[] values, int maxSlots, AbstractNode<K, V> next) {
+		super(maxSlots);
 		this.values = values;
 		this.next = next;
 	}
@@ -55,32 +54,31 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	/**
 	 * @return the next
 	 */
-	public Node<K, V> getNext() {
+	public AbstractNode<K, V> getNext() {
 		return next;
 	}
 
 	/**
 	 * @param next the next to set
 	 */
-	public void setNext(Node<K, V> next) {
+	public void setNext(AbstractNode<K, V> next) {
 		this.next = next;
 	}
 	
 	
 	public void insert(K key, V value) {
-		K[] keys = getKeys();
 		V[] values = getValues();
 		
 		int index = getSlots() - 1;
 		
-		while (index >= 0 && key.compareTo(keys[index]) < 0) {
-			keys[index + 1] = keys[index];
+		while (index >= 0 && key.compareTo(getKey(index)) < 0) {
+			setKey(getKey(index), index + 1);
 			values[index + 1] = values[index];
 
 			index--;
 		}
 		
-		keys[index + 1] = key;
+		setKey(key, index + 1);
 		values[index + 1] = value;
 		
 		setSlots(getSlots() + 1);
@@ -90,19 +88,16 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 		checkIsFull();
 		
 		@SuppressWarnings("unchecked")
-		K keys[] = (K[]) new Comparable[getKeys().length];
-		@SuppressWarnings("unchecked")
 		V values[] = (V[]) new Object[getValues().length];
 
-		return new LeafNode<K, V>(keys, values, 0, next);
+		return new LeafNode<K, V>(values, getMaxSlots(), next);
 	}
 	
 	public void remove(int index) {
-		K[] keys = getKeys();
 		V[] values = getValues();
 		
 		for (int i = index; i < getSlots() - 1; i++) {
-			keys[i] = keys[i + 1];
+			setKey(getKey(i + 1), i);
 			values[i] = values[i + 1];
 		}
 		
@@ -114,7 +109,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 */
 	@Override
 	public boolean hasEnoughSlots() {
-		return getSlots() >= (getKeys().length + 1) / 2;
+		return getSlots() >= (getMaxSlots() + 1) / 2;
 	}
 
 	/* (non-Javadoc)
@@ -122,7 +117,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 */
 	@Override
 	public boolean canGiveSlots() {
-		return getSlots() - 1 >= (getKeys().length + 1) / 2;
+		return getSlots() - 1 >= (getMaxSlots() + 1) / 2;
 	}
 
 	/* (non-Javadoc)
@@ -131,7 +126,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	@Override
 	public void leftShift(int count) {
 		for (int i = 0; i < getSlots() - count; i++) {
-			getKeys()[i] = getKeys()[i + count]; 
+			setKey(getKey(i + count), i);
 			getValues()[i] = getValues()[i + count]; 
 		}
 	}
@@ -142,7 +137,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	@Override
 	public void rightShift(int count) {
 		for (int i = getSlots() - 1; i >= 0 ; i--) {
-			getKeys()[i + count] = getKeys()[i];
+			setKey(getKey(i), i + count);
 			getValues()[i + count] = getValues()[i];
 		}
 	}
@@ -151,9 +146,9 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToLeft(int)
 	 */
 	@Override
-	public void copyToLeft(Node<K,V> node, int count) {
+	public void copyToLeft(AbstractNode<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
-			node.getKeys()[node.getSlots() + i] = getKeys()[i];
+			node.setKey(getKey(i), node.getSlots() + i);
 			((LeafNode<K, V>) node).getValues()[node.getSlots() + i] =
 				getValues()[i];
 		}
@@ -163,9 +158,9 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToRight(int)
 	 */
 	@Override
-	public void copyToRight(Node<K,V> node, int count) {
+	public void copyToRight(AbstractNode<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
-			node.getKeys()[i] = getKeys()[getSlots() - count + i];
+			node.setKey(getKey(getSlots() - count + i), i);
 			((LeafNode<K, V>) node).getValues()[i] =
 				getValues()[getSlots() - count + i];
 		}
@@ -197,7 +192,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node<K, V> {
 		buffer.append('\n');
 		buffer.append(indent);
 		buffer.append(" next: ");
-		buffer.append(next == null ? "null" : next.getKeys()[0]);
+		buffer.append(next == null ? "null" : next.getKey(0));
 		
 		return buffer.toString();
 	}

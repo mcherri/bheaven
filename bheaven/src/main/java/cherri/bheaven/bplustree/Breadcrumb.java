@@ -23,10 +23,10 @@ package cherri.bheaven.bplustree;
  *
  */
 public class Breadcrumb<K extends Comparable<K>, V> {
-	private final Node<K, V> node;
+	private final AbstractNode<K, V> node;
 	private final int index;
 	
-	public Breadcrumb(Node<K,V> node, int index) {
+	public Breadcrumb(AbstractNode<K,V> node, int index) {
 		this.node = node;
 		this.index = index;
 	}
@@ -34,7 +34,7 @@ public class Breadcrumb<K extends Comparable<K>, V> {
 	/**
 	 * @return the node
 	 */
-	public Node<K, V> getNode() {
+	public AbstractNode<K, V> getNode() {
 		return node;
 	}
 	/**

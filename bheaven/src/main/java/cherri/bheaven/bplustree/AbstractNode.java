@@ -19,37 +19,42 @@
  */
 package cherri.bheaven.bplustree;
 
+import java.util.Arrays;
+
 
 /**
  *
  */
-public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<Node<K, V>>*/ {
+public abstract class AbstractNode<K extends Comparable<K>, V> /*implements Comparable<Node<K, V>>*/ {
 
 	private K keys[];
 	private int slots;
 
 	/**
-	 * @param keys
-	 * @param slots
-	 * @param parent
+	 * @param maxSlots
 	 */
-	public Node(K[] keys, int slots) {
-		this.keys = keys;
-		this.slots = slots;
+	@SuppressWarnings("unchecked")
+	public AbstractNode(int maxSlots) {
+		this.keys = (K[]) new Comparable[maxSlots];
+		this.slots = 0;
 	}
 
 	/**
-	 * @return the keys
+	 * @return the key
 	 */
-	public K[] getKeys() {
-		return keys;
+	public K getKey(int index) {
+		return keys[index];
 	}
 
 	/**
-	 * @param keys the keys to set
+	 * @param key the key to set
 	 */
-	public void setKeys(K[] keys) {
-		this.keys = keys;
+	public void setKey(K key, int index) {
+		this.keys[index] = key;
+	}
+	
+	public int getKeyIndex(K key) {
+		return Arrays.binarySearch(keys, 0, slots, key, null);
 	}
 
 	/**
@@ -65,13 +70,17 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 	public void setSlots(int slots) {
 		this.slots = slots;
 	}
+	
+	public int getMaxSlots() {
+		return keys.length;
+	}
 
 	public boolean isEmpty() {
 		return getSlots() == 0;
 	}
 	
 	public boolean isFull() {
-		return getSlots() == getKeys().length;
+		return getSlots() == keys.length;
 	}
 	
 	/**
@@ -93,9 +102,9 @@ public abstract class Node<K extends Comparable<K>, V> /*implements Comparable<N
 	
 	public abstract void rightShift(int count);
 	
-	public abstract void copyToLeft(Node<K,V> node, int count);
+	public abstract void copyToLeft(AbstractNode<K,V> node, int count);
 	
-	public abstract void copyToRight(Node<K,V> node, int count);
+	public abstract void copyToRight(AbstractNode<K,V> node, int count);
 	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

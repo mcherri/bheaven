@@ -19,29 +19,27 @@
  */
 package cherri.bheaven.bplustree;
 
-
 /**
  *
  */
-public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
-	private Node<K, V> children[];
+public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
+	private AbstractNode<K, V> children[];
 	
 	/**
 	 * @param keys
 	 * @param children
-	 * @param slots
-	 * @param parent
+	 * @param maxSlots
 	 */
-	public InnerNode(K[] keys, Node<K, V>[] children, int slots) {
-		super(keys, slots);
+	public InnerNode(AbstractNode<K, V>[] children, int maxSlots) {
+		super(maxSlots);
 		
 		checkChildrenAreValid(children);
 		this.children = children;
 	}
 
-	private void checkChildrenAreValid(Node<K, V>[] children) {
-		if (getKeys() != null && children != null
-				&& getKeys().length + 1 != children.length) {
+	private void checkChildrenAreValid(AbstractNode<K, V>[] children) {
+		if (children != null
+				&& getMaxSlots() + 1 != children.length) {
 			throw new IllegalArgumentException("Keys should be less that " +
 					"children by 1");
 		}
@@ -50,32 +48,30 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	/**
 	 * @return the children
 	 */
-	public Node<K, V>[] getChildren() {
+	public AbstractNode<K, V>[] getChildren() {
 		return children;
 	}
 
 	/**
 	 * @param children the children to set
 	 */
-	public void setChildren(Node<K, V>[] children) {
-		checkChildrenAreValid(children);
+	public void setChildren(AbstractNode<K, V>[] children) {
 		this.children = children;
 	}
 	
-	public void insert(K key, Node<K, V> child) {
-		K[] keys = getKeys();
-		Node<K, V>[] children = getChildren();
+	public void insert(K key, AbstractNode<K, V> child) {
+		AbstractNode<K, V>[] children = getChildren();
 		
 		int index = getSlots() - 1;
 		
-		while (index >= 0 && key.compareTo(keys[index]) < 0) {
-			keys[index + 1] = keys[index];
+		while (index >= 0 && key.compareTo(getKey(index)) < 0) {
+			setKey(getKey(index), index + 1);
 			children[index + 2] = children[index + 1];
 
 			index--;
 		}
 		
-		keys[index + 1] = key;
+		setKey(key, index + 1);
 		children[index + 2] = child;
 		
 		setSlots(getSlots() + 1);
@@ -85,20 +81,17 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 		checkIsFull();
 		
 		@SuppressWarnings("unchecked")
-		K keys[] = (K[]) new Comparable[getKeys().length];
-		@SuppressWarnings("unchecked")
-		Node<K, V> children[] = new Node[getChildren().length];
+		AbstractNode<K, V> children[] = new AbstractNode[getChildren().length];
 		
-		return new InnerNode<K, V>(keys, children, 0);
+		return new InnerNode<K, V>(children, getMaxSlots());
 	}
 	
 	public void remove(int index) {
-		K[] keys = getKeys();
-		Node<K, V>[] children = getChildren();
+		AbstractNode<K, V>[] children = getChildren();
 		
 		for (int i = index; i < getSlots(); i++) {
 			if (i < getSlots() - 1) {
-				keys[i] = keys[i + 1];
+				setKey(getKey(i + 1), i);
 			}
 			children[i] = children[i + 1];
 		}
@@ -112,7 +105,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 */
 	@Override
 	public boolean hasEnoughSlots() {
-		return getSlots() >= (getKeys().length - 1) / 2;
+		return getSlots() >= (getMaxSlots() - 1) / 2;
 	}
 
 	/* (non-Javadoc)
@@ -120,7 +113,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 */
 	@Override
 	public boolean canGiveSlots() {
-		return getSlots() - 1 >= (getKeys().length - 1) / 2;
+		return getSlots() - 1 >= (getMaxSlots() - 1) / 2;
 	}
 
 	/* (non-Javadoc)
@@ -129,7 +122,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	@Override
 	public void leftShift(int count) {
 		for (int i = 0; i < getSlots() - count; i++) {
-			getKeys()[i] = getKeys()[i + count]; 
+			setKey(getKey(i + count), i);
 			getChildren()[i] = getChildren()[i + count]; 
 		}
 		getChildren()[getSlots() - count] = getChildren()[getSlots()];
@@ -141,7 +134,7 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	@Override
 	public void rightShift(int count) {
 		for (int i = getSlots() - 1; i >= 0 ; i--) {
-			getKeys()[i + count] = getKeys()[i];
+			setKey(getKey(i), i + count);
 			getChildren()[i + count + 1] = getChildren()[i + 1];
 		}
 		getChildren()[count] = getChildren()[0];
@@ -152,11 +145,10 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToLeft(int)
 	 */
 	@Override
-	public void copyToLeft(Node<K,V> node, int count) {
+	public void copyToLeft(AbstractNode<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			if(i < getSlots()) {
-				node.getKeys()[node.getSlots() + i + 1] =
-					getKeys()[i];
+				node.setKey(getKey(i), node.getSlots() + i + 1);
 			}
 			((InnerNode<K, V>) node).getChildren()[node.getSlots() + i + 1] =
 				getChildren()[i];
@@ -167,10 +159,9 @@ public class InnerNode<K extends Comparable<K>, V> extends Node<K, V> {
 	 * @see com.cherri.bplustree.Node#copyToRight(int)
 	 */
 	@Override
-	public void copyToRight(Node<K,V> node, int count) {
+	public void copyToRight(AbstractNode<K,V> node, int count) {
 		for (int i = 0; i < count - 1; i++) {
-			node.getKeys()[i] = 
-				getKeys()[getSlots() - count + i + 1];
+			node.setKey(getKey(getSlots() - count + i + 1), i);
 			((InnerNode<K, V>) node).getChildren()[i + 1] =
 				getChildren()[getSlots() - count + i + 2];
 		}

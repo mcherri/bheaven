@@ -43,21 +43,19 @@ public class BPlusTreeCheckerTest {
 		checker = new BPlusTreeChecker<String, String>(tree);
 		
 		root1 = new LeafNode<String, String>(
-					Utils.generateStrings(10, 5, "a"), 
-					Utils.generateStrings(10, 5, "va"), 
-					5, null);
+				Utils.generateStrings(10, 5, "va"), 
+				10, null);
+		Utils.generateStrings(root1, 5, "a");
 		
-		root2 = new InnerNode<String, String>(null, null, 2 - 1);
-		Node<String, String> children2[] = Utils.getLeafNodes(root2, 4, 2, "a",
-				"va");
-		String keys2[] = Utils.getChildrenKeys(children2, 4, 2);
-		root2.setKeys(keys2);
+		root2 = new InnerNode<String, String>(null, 3);
+		AbstractNode<String, String> children2[] =
+			Utils.getLeafNodes(root2, 4, 2, "a", "va");
+		Utils.setChildrenKeys(root2, children2, 4, 2);
 		root2.setChildren(children2);
 		
-		root3 = new InnerNode<String, String>(null, null, 3 - 1); 
-		Node<String, String> children3[] = Utils.getInnerNodes(root3, 5, 3);
-		String keys3[] = Utils.getChildrenKeys(children3, 5, 3);
-		root3.setKeys(keys3);
+		root3 = new InnerNode<String, String>(null, 4); 
+		AbstractNode<String, String> children3[] = Utils.getInnerNodes(root3, 5, 3);
+		Utils.setChildrenKeys(root3, children3, 5, 3);
 		root3.setChildren(children3);
 		
 	}
@@ -78,15 +76,16 @@ public class BPlusTreeCheckerTest {
 		assertThat("", checker.checkTreeIsBalanced(), is(true));
 		
 		@SuppressWarnings("unchecked")
-		Node<String, String> children41[] = new Node[] {
-			new LeafNode<String, String>(null, null, 0, null),
-			new LeafNode<String, String>(null, null, 0, null)
+		AbstractNode<String, String> children41[] = new AbstractNode[] {
+			new LeafNode<String, String>(null, 0, null),
+			new LeafNode<String, String>(null, 0, null)
 		};
-		Node<String, String> children31[] = ((InnerNode<String, String>) root3
+		AbstractNode<String, String> children31[] = ((InnerNode<String, String>) root3
 				.getChildren()[0]).getChildren();
-		String keys[] = { "k1" };
-		children31[1] = new InnerNode<String, String>(keys, children41, 2);
-		
+		//String keys[] = { "k1" };
+		children31[1] = new InnerNode<String, String>(children41, 1);
+		children31[1].setKey("k1", 0);
+
 		assertThat("", checker.checkTreeIsBalanced(), is(false));
 	}
 	
@@ -152,7 +151,7 @@ public class BPlusTreeCheckerTest {
 				checker.checkInternalNodesKeysCountWithRespectToChildren(),
 				is(true));
 		
-		root3.getKeys()[0] = "a20";
+		root3.setKey("a20", 0);
 		
 		assertThat("",
 				checker.checkInternalNodesKeysCountWithRespectToChildren(),
@@ -173,10 +172,9 @@ public class BPlusTreeCheckerTest {
 		
 		assertThat("", checker.checkInternalNodesKeysOrder(), is(true));
 		
-		String keys[] = root3.getKeys();
-		String temp = keys[0];
-		keys[0] = keys[1];
-		keys[1] = temp;
+		String temp = root3.getKey(0);
+		root3.setKey(root3.getKey(1), 0);
+		root3.setKey(temp, 1);
 		
 		assertThat("", checker.checkInternalNodesKeysOrder(), is(false));
 	}
@@ -195,8 +193,8 @@ public class BPlusTreeCheckerTest {
 		
 		assertThat("", checker.checkLeafNodesLinksOrder(), is(true));
 		
-		Node<String, String> children[] = root3.getChildren();
-		Node<String, String> temp = children[0];
+		AbstractNode<String, String> children[] = root3.getChildren();
+		AbstractNode<String, String> temp = children[0];
 		children[0] = children[1];
 		children[1] = temp;
 		

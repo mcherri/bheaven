@@ -24,7 +24,7 @@ package cherri.bheaven.bplustree;
  */
 public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	
-	private final Node<K, V> root;
+	private final AbstractNode<K, V> root;
 	
 	/**
 	 * @param tree
@@ -40,7 +40,8 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * so the tree is always height balanced. 
 	 */
 	public boolean checkTreeIsBalanced() {
-		return root == null || AbstractNodeChecker.getNodeChecker(root).isBalanced();
+		return root == null || 
+				AbstractNodeChecker.getNodeChecker(root).isBalanced();
 	}
 
 	
@@ -55,7 +56,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 		
 		boolean result = true;
 		if(root instanceof InnerNode<?, ?>) {
-			Node<K, V> children[] = ((InnerNode<K, V>) root)
+			AbstractNode<K, V> children[] = ((InnerNode<K, V>) root)
 					.getChildren();
 			for (int i = 0; result && i < root.getSlots() + 1; i++) {
 				AbstractNodeChecker<K, V> nodeChecker =
@@ -84,7 +85,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 	 * search tree. 
 	 */
 	public boolean checkInternalNodesKeysCountWithRespectToChildren() {
-		/* Inernal node will always have key values one less than then number
+		/* Internal node will always have key values one less than then number
 		 * of its non-empty children according to our node structure. The
 		 * remaining thing to check it the last node key value.
 		 */  
@@ -124,7 +125,7 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 			return true;
 		}
 		
-		Node<K, V> nodes[] = AbstractNodeChecker.getNodeChecker(root).getLeafNodes();
+		AbstractNode<K, V> nodes[] = AbstractNodeChecker.getNodeChecker(root).getLeafNodes();
 		
 		for (int i = 0; i < nodes.length - 1; i++) {
 			LeafNode<K, V> node = (LeafNode<K, V>) nodes[i]; 

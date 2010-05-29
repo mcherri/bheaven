@@ -44,21 +44,19 @@ public class BPlusTreeTest {
 		tree1 = new BPlusTree<String, String>(4, 5);
 		
 		root1 = new LeafNode<String, String>(
-					Utils.generateStrings(10, 5, "a"), 
 					Utils.generateStrings(10, 5, "va"), 
-					5, null);
+					10, null);
+		Utils.generateStrings(root1, 5, "a");
 		
-		root2 = new InnerNode<String, String>(null, null, 2 - 1);
-		Node<String, String> children2[] = Utils.getLeafNodes(root2, 4, 2, "a",
-				"va");
-		String keys2[] = Utils.getChildrenKeys(children2, 4, 2);
-		root2.setKeys(keys2);
+		root2 = new InnerNode<String, String>(null, 3);
+		AbstractNode<String, String> children2[] =
+			Utils.getLeafNodes(root2, 4, 2, "a", "va");
+		Utils.setChildrenKeys(root2, children2, 4, 2);
 		root2.setChildren(children2);
 		
-		root3 = new InnerNode<String, String>(null, null, 3 - 1); 
-		Node<String, String> children3[] = Utils.getInnerNodes(root3, 5, 3);
-		String keys3[] = Utils.getChildrenKeys(children3, 5, 3);
-		root3.setKeys(keys3);
+		root3 = new InnerNode<String, String>(null, 4); 
+		AbstractNode<String, String> children3[] = Utils.getInnerNodes(root3, 5, 3);
+		Utils.setChildrenKeys(root3, children3, 5, 3);
 		root3.setChildren(children3);
 		
 	}
@@ -146,8 +144,8 @@ public class BPlusTreeTest {
 		tree.put(KEY, VALUE);
 		
 		@SuppressWarnings("unchecked")
-		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		AbstractNode<String, String> node =
+			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Inserting in an empty B+ tree should initiate the root node" +
@@ -160,8 +158,8 @@ public class BPlusTreeTest {
 	@SuppressWarnings("unchecked")
 	private void assertThatValuesCountIs(BPlusTree<String, String> tree,
 			int count) {
-		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		AbstractNode<String, String> node =
+			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 
 		assertThat("Tree has an incorrect values count.",
 				AbstractNodeChecker.getNodeChecker(node).getValuesCount(), is(count));
@@ -187,7 +185,6 @@ public class BPlusTreeTest {
 	
 	private void forwardEmpty(BPlusTree<String, String> tree, int count) {
 		
-		//int valuesCount = tree.get
 		for (int i = 0; i < count; i++) {
 			tree.remove("a" + i);
 			
@@ -210,13 +207,11 @@ public class BPlusTreeTest {
 	@SuppressWarnings("unchecked")
 	private void assertThatSplitOccured(String message,
 			BPlusTree<String, String> tree, int count, int depth) {
-		Node<String, String> node = (Node<String, String>) ReflectionTestUtils
+		AbstractNode<String, String> node = (AbstractNode<String, String>) ReflectionTestUtils
 				.getField(tree, Constants.ROOT);
 		
 		assertThat(message, node
 				.getSlots() + 1, is(count));
-		
-		//System.out.println(node);
 		
 		int treeDepth = 0;
 		
@@ -297,8 +292,8 @@ public class BPlusTreeTest {
 		tree.remove(KEY);
 		
 		@SuppressWarnings("unchecked")
-		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		AbstractNode<String, String> node =
+			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Deleting the last element from B+ tree should null the root" +
@@ -356,8 +351,8 @@ public class BPlusTreeTest {
 		}
 		
 		@SuppressWarnings("unchecked")
-		Node<String, String> node =
-			(Node<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
+		AbstractNode<String, String> node =
+			(AbstractNode<String, String>) ReflectionTestUtils.getField(tree, Constants.ROOT);
 		
 		assertThat(
 				"Inserting and Deleting the same keys should give a valid " +

@@ -24,17 +24,17 @@ package cherri.bheaven.bplustree;
  */
 public abstract class AbstractNodeChecker<K extends Comparable<K>, V> {
 	
-	protected Node<K, V> node;
+	protected AbstractNode<K, V> node;
 	
 	/**
 	 * @param node
 	 */
-	AbstractNodeChecker(Node<K, V> node) {
+	AbstractNodeChecker(AbstractNode<K, V> node) {
 		this.node = node;
 	}
 	
 	public static <K extends Comparable<K>, V> AbstractNodeChecker<K, V> getNodeChecker(
-			Node<K, V> node) {
+			AbstractNode<K, V> node) {
 		if(node instanceof InnerNode<?, ?>) {
 			return new InnerNodeChecker<K, V>((InnerNode<K, V>) node);
 		} else {
@@ -83,9 +83,8 @@ public abstract class AbstractNodeChecker<K extends Comparable<K>, V> {
 	public boolean checkKeyOrder() {
 		boolean result = true;
 		int index = 0;
-		K[] keys = node.getKeys();
 		while (index < node.getSlots() - 1) {
-			result = result && keys[index].compareTo(keys[index + 1]) <= 0;
+			result = result && node.getKey(index).compareTo(node.getKey(index + 1)) <= 0;
 			index++;
 		}
 		return result;
@@ -94,13 +93,13 @@ public abstract class AbstractNodeChecker<K extends Comparable<K>, V> {
 	/*
 	 * Self check used in unit testing.
 	 */
-	public abstract Node<K, V>[] getLeafNodes();
+	public abstract AbstractNode<K, V>[] getLeafNodes();
 	
 	/*
 	 * Self check used in unit testing.
 	 */
 	public int getValuesCount() {
-		Node<K, V> nodes[] = getLeafNodes();
+		AbstractNode<K, V> nodes[] = getLeafNodes();
 		
 		int count = 0;
 		

@@ -61,7 +61,7 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 */
 	@Override
 	public boolean checkCount() {
-		return checkCount(node.getSlots(), node.getKeys().length);
+		return checkCount(node.getSlots(), node.getMaxSlots());
 	}
 
 	/* (non-Javadoc)
@@ -77,8 +77,8 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public Node<K, V>[] getLeafNodes() {
-		return new Node[] { node };
+	public AbstractNode<K, V>[] getLeafNodes() {
+		return new AbstractNode[] { node };
 	}
 
 	/* (non-Javadoc)
@@ -86,7 +86,7 @@ public class LeafNodeChecker<K extends Comparable<K>, V> extends
 	 */
 	@Override
 	public K getLastKey() {
-		return node.getKeys()[node.getSlots() - 1];
+		return node.getKey(node.getSlots() - 1);
 	}
 
 }
