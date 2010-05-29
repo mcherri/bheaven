@@ -26,53 +26,42 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	private AbstractNode<K, V> children[];
 	
 	/**
-	 * @param keys
-	 * @param children
 	 * @param maxSlots
 	 */
-	public InnerNode(AbstractNode<K, V>[] children, int maxSlots) {
+	@SuppressWarnings("unchecked")
+	public InnerNode(int maxSlots) {
 		super(maxSlots);
 		
-		checkChildrenAreValid(children);
-		this.children = children;
-	}
-
-	private void checkChildrenAreValid(AbstractNode<K, V>[] children) {
-		if (children != null
-				&& getMaxSlots() + 1 != children.length) {
-			throw new IllegalArgumentException("Keys should be less that " +
-					"children by 1");
-		}
+		children = new AbstractNode[maxSlots + 1];
 	}
 
 	/**
-	 * @return the children
+	 * @return the child
 	 */
-	public AbstractNode<K, V>[] getChildren() {
-		return children;
+	public AbstractNode<K, V> getChild(int index) {
+		return children[index];
 	}
 
 	/**
-	 * @param children the children to set
+	 * @param child the child to set
 	 */
-	public void setChildren(AbstractNode<K, V>[] children) {
-		this.children = children;
+	public void setChild(AbstractNode<K, V> child, int index) {
+		children[index] = child;
 	}
 	
 	public void insert(K key, AbstractNode<K, V> child) {
-		AbstractNode<K, V>[] children = getChildren();
 		
 		int index = getSlots() - 1;
 		
 		while (index >= 0 && key.compareTo(getKey(index)) < 0) {
 			setKey(getKey(index), index + 1);
-			children[index + 2] = children[index + 1];
+			setChild(getChild(index + 1), index + 2);
 
 			index--;
 		}
 		
 		setKey(key, index + 1);
-		children[index + 2] = child;
+		setChild(child, index + 2);
 		
 		setSlots(getSlots() + 1);
 	}
@@ -80,20 +69,16 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public InnerNode<K, V> split() {
 		checkIsFull();
 		
-		@SuppressWarnings("unchecked")
-		AbstractNode<K, V> children[] = new AbstractNode[getChildren().length];
-		
-		return new InnerNode<K, V>(children, getMaxSlots());
+		return new InnerNode<K, V>(getMaxSlots());
 	}
 	
 	public void remove(int index) {
-		AbstractNode<K, V>[] children = getChildren();
 		
 		for (int i = index; i < getSlots(); i++) {
 			if (i < getSlots() - 1) {
 				setKey(getKey(i + 1), i);
 			}
-			children[i] = children[i + 1];
+			setChild(getChild(i + 1), i);
 		}
 		
 		setSlots(getSlots() - 1);
@@ -123,9 +108,10 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public void leftShift(int count) {
 		for (int i = 0; i < getSlots() - count; i++) {
 			setKey(getKey(i + count), i);
-			getChildren()[i] = getChildren()[i + count]; 
+			setChild(getChild(i + count), i);
 		}
-		getChildren()[getSlots() - count] = getChildren()[getSlots()];
+		
+		setChild(getChild(getSlots()), getSlots() - count);
 	}
 
 	/* (non-Javadoc)
@@ -135,9 +121,10 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public void rightShift(int count) {
 		for (int i = getSlots() - 1; i >= 0 ; i--) {
 			setKey(getKey(i), i + count);
-			getChildren()[i + count + 1] = getChildren()[i + 1];
+			setChild(getChild(i + 1), i + count + 1);
 		}
-		getChildren()[count] = getChildren()[0];
+		
+		setChild(getChild(0), count);
 		
 	}
 
@@ -150,8 +137,7 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 			if(i < getSlots()) {
 				node.setKey(getKey(i), node.getSlots() + i + 1);
 			}
-			((InnerNode<K, V>) node).getChildren()[node.getSlots() + i + 1] =
-				getChildren()[i];
+			((InnerNode<K, V>) node).setChild(getChild(i), node.getSlots() + i + 1);
 		}
 	}
 
@@ -162,11 +148,9 @@ public class InnerNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public void copyToRight(AbstractNode<K,V> node, int count) {
 		for (int i = 0; i < count - 1; i++) {
 			node.setKey(getKey(getSlots() - count + i + 1), i);
-			((InnerNode<K, V>) node).getChildren()[i + 1] =
-				getChildren()[getSlots() - count + i + 2];
+			((InnerNode<K, V>) node).setChild(getChild(getSlots() - count + i + 2), i + 1);
 		}
-		((InnerNode<K, V>) node).getChildren()[0] = 
-			getChildren()[getSlots() - count + 1];
+		((InnerNode<K, V>) node).setChild(getChild(getSlots() - count + 1), 0);
 
 	}
 

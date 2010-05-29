@@ -34,7 +34,7 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public LeafNode(int maxSlots, AbstractNode<K, V> next) {
 		super(maxSlots);
 
-		this.values = (V[]) new Object[maxSlots];
+		values = (V[]) new Object[maxSlots];
 		this.next = next;
 	}
 	

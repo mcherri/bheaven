@@ -56,11 +56,10 @@ public class BPlusTreeChecker<K extends Comparable<K>, V> {
 		
 		boolean result = true;
 		if(root instanceof InnerNode<?, ?>) {
-			AbstractNode<K, V> children[] = ((InnerNode<K, V>) root)
-					.getChildren();
 			for (int i = 0; result && i < root.getSlots() + 1; i++) {
 				AbstractNodeChecker<K, V> nodeChecker =
-					AbstractNodeChecker.getNodeChecker(children[i]);
+					AbstractNodeChecker.getNodeChecker(
+							((InnerNode<K, V>) root).getChild(i));
 				result = result && nodeChecker.checkCount();
 			}
 	

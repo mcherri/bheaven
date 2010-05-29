@@ -48,16 +48,13 @@ public class BPlusTreeTest {
 		Utils.generateStrings(root1, 5, "a");
 		Utils.generateValueStrings(root1, 5, "va");
 		
-		root2 = new InnerNode<String, String>(null, 3);
-		AbstractNode<String, String> children2[] =
-			Utils.getLeafNodes(root2, 4, 2, "a", "va");
-		Utils.setChildrenKeys(root2, children2, 4, 2);
-		root2.setChildren(children2);
+		root2 = new InnerNode<String, String>(3);
+		Utils.setLeafNodes(root2, 4, 2, "a", "va");
+		Utils.setChildrenKeys(root2, 2);
 		
-		root3 = new InnerNode<String, String>(null, 4); 
-		AbstractNode<String, String> children3[] = Utils.getInnerNodes(root3, 5, 3);
-		Utils.setChildrenKeys(root3, children3, 5, 3);
-		root3.setChildren(children3);
+		root3 = new InnerNode<String, String>(4); 
+		Utils.setInnerNodes(root3, 5, 3);
+		Utils.setChildrenKeys(root3, 3);
 		
 	}
 
@@ -216,7 +213,7 @@ public class BPlusTreeTest {
 		int treeDepth = 0;
 		
 		while (node instanceof InnerNode<?, ?>) {
-			node = ((InnerNode<String, String>) node).getChildren()[0];
+			node = ((InnerNode<String, String>) node).getChild(0);
 			treeDepth++;
 		}
 		

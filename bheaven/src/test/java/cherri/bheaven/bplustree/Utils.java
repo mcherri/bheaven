@@ -24,71 +24,54 @@ package cherri.bheaven.bplustree;
  */
 public class Utils {
 
-	public static AbstractNode<String, String>[] getInnerNodes(
-			AbstractNode<String, String> parent, int size, int slots) {
+	public static void setInnerNodes(
+			InnerNode<String, String> parent, int size, int slots) {
 		
-		@SuppressWarnings("unchecked")
-		AbstractNode<String, String> nodes[] = new AbstractNode[size];
 		AbstractNode<String, String> next = null;
 		
 		for (int i = slots - 1; i >= 0; i--) {
-			nodes[i] = new InnerNode<String, String>(null, size);
-			AbstractNode<String, String> children[] = getLeafNodes(nodes[i],
+			InnerNode<String, String> node = new InnerNode<String, String>(size);
+			setLeafNodes(node,
 					size, slots, String.valueOf((char) ('a' + i)), "v"
 							+ ((char) ('a' + i)));
 			
-			((LeafNode<String, String>) children[slots - 1]).setNext(next);
+			((LeafNode<String, String>) node.getChild(slots - 1)).setNext(next);
 			
-			setChildrenKeys(nodes[i], children, size, slots);
-			((InnerNode<String, String>) nodes[i]).setChildren(children);
+			setChildrenKeys(node, slots);
 			
-			next = children[0];
+			next = node.getChild(0);
+			parent.setChild(node, i);
 		}
 		
-		return nodes;
 	}
 
-	public static void setChildrenKeys(AbstractNode<String, String> node,
-			AbstractNode<String, String> children[],
-			int size, int slots) {
+	public static void setChildrenKeys(InnerNode<String, String> node,
+			int slots) {
 		for (int j = 0; j < slots - 1; j++) {
 	
-			node.setKey(AbstractNodeChecker.getNodeChecker(children[j]).getLastKey(), j);
+			node.setKey(AbstractNodeChecker.getNodeChecker(node.getChild(j)).getLastKey(), j);
 		}
 		node.setSlots(slots - 1);
 	}
 
-	public static AbstractNode<String, String>[] getLeafNodes(
-			AbstractNode<String, String> parent, int size, int slots,
+	public static void setLeafNodes(
+			InnerNode<String, String> parent, int size, int slots,
 			String key, String value) {
 		
-		@SuppressWarnings("unchecked")
-		AbstractNode<String, String> nodes[] = new AbstractNode[size];
 		AbstractNode<String, String> next = null;
 		
 		for (int i = slots - 1; i >= 0; i--) {
-			nodes[i] = new LeafNode<String, String>(
-					size * 2, next);
-			generateStrings(nodes[i], slots * 2, key + i);
-			generateValueStrings((LeafNode<String, String>) nodes[i],
+			AbstractNode<String, String> node =
+				new LeafNode<String, String>(size * 2, next);
+			generateStrings(node, slots * 2, key + i);
+			generateValueStrings((LeafNode<String, String>) node,
 					slots * 2, value + i);
-			next = nodes[i]; 
+			parent.setChild(node, i);
+			next = node; 
 		}
 		
-		return nodes;
 	}
 
-	public static String[] generateStrings(int size, int slots,
-			String prefix) {
-		String result[] = new String[size];
-		
-		for (int i = 0; i < slots; i++) {
-			result[i] = prefix + i;
-		}
-		
-		return result;
-	}
-	
 	public static void generateStrings(AbstractNode<String, String> node,
 			int slots, String prefix) {
 		

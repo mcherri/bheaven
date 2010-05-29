@@ -64,7 +64,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			}
 			
 			
-			node = ((InnerNode<K, V>) node).getChildren()[index];
+			node = ((InnerNode<K, V>) node).getChild(index);
 			breadcrumbAdd(breadcrumbList, node, index);
 
 		}
@@ -131,7 +131,6 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void put(K key, V value) {
 		if (root == null) {
 			root = new LeafNode<K, V>(records, null);
@@ -207,8 +206,8 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
                from the leaf to the root. 
             */
 			if (parent == null) {
-				parent = new InnerNode<K, V>(new AbstractNode[order], order - 1);
-				parent.getChildren()[0] = node;
+				parent = new InnerNode<K, V>(order - 1);
+				parent.setChild(node, 0);
 				root = parent;
 			}
 			
@@ -229,11 +228,11 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		for (int i = 0; i < count; i++, right--) {
 			if(found || key.compareTo(parent.getKey(left)) < 0) {
 				newInnerNode.setKey(parent.getKey(left), right);
-				newInnerNode.getChildren()[right + 1] = parent.getChildren()[left + 1];
+				newInnerNode.setChild(parent.getChild(left + 1), right + 1);
 				left--;
 			} else {
 				newInnerNode.setKey(key, right);
-				newInnerNode.getChildren()[right + 1] = newNode;
+				newInnerNode.setChild(newNode, right + 1);
 				found = true;
 			}
 		}
@@ -243,7 +242,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 			parent.insert(key, newNode);
 		}
 		parent.setSlots(parent.getSlots() - 1);
-		newInnerNode.getChildren()[0] = parent.getChildren()[parent.getSlots() + 1];
+		newInnerNode.setChild(parent.getChild(parent.getSlots() + 1), 0);
 		return newInnerNode;
 	}
 
@@ -290,11 +289,11 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		AbstractNode<K, V> results[] = new AbstractNode[2];
 		
 		if (index > 0) {
-			results[0] = parent.getChildren()[index - 1];
+			results[0] = parent.getChild(index - 1);
 		}
 		
 		if (index < parent.getSlots()) {
-			results[1] = parent.getChildren()[index + 1];
+			results[1] = parent.getChild(index + 1);
 		}
 
 		return results;
@@ -364,9 +363,9 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 
 		if (parent != root || index != 0) {
 			
-			node = ((InnerNode<K, V>) node).getChildren()[index - 1];
+			node = ((InnerNode<K, V>) node).getChild(index - 1);
 			while (node instanceof InnerNode<?, ?>) {
-				node = ((InnerNode<K, V>) node).getChildren()[node.getSlots()];				
+				node = ((InnerNode<K, V>) node).getChild(node.getSlots());				
 			}
 			result = (LeafNode<K, V>) node;
 		}
@@ -456,7 +455,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		            the tree loses a level. 
 				 */
 				if(parent.getSlots() == 0) {
-					root = parent.getChildren()[0];
+					root = parent.getChild(0);
 				}
 				
 			}

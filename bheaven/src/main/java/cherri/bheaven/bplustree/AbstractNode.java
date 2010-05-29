@@ -35,8 +35,8 @@ public abstract class AbstractNode<K extends Comparable<K>, V> /*implements Comp
 	 */
 	@SuppressWarnings("unchecked")
 	public AbstractNode(int maxSlots) {
-		this.keys = (K[]) new Comparable[maxSlots];
-		this.slots = 0;
+		keys = (K[]) new Comparable[maxSlots];
+		slots = 0;
 	}
 
 	/**
