@@ -43,9 +43,9 @@ public class BPlusTreeCheckerTest {
 		checker = new BPlusTreeChecker<String, String>(tree);
 		
 		root1 = new LeafNode<String, String>(
-				Utils.generateStrings(10, 5, "va"), 
 				10, null);
 		Utils.generateStrings(root1, 5, "a");
+		Utils.generateValueStrings(root1, 5, "va");
 		
 		root2 = new InnerNode<String, String>(null, 3);
 		AbstractNode<String, String> children2[] =
@@ -77,8 +77,8 @@ public class BPlusTreeCheckerTest {
 		
 		@SuppressWarnings("unchecked")
 		AbstractNode<String, String> children41[] = new AbstractNode[] {
-			new LeafNode<String, String>(null, 0, null),
-			new LeafNode<String, String>(null, 0, null)
+			new LeafNode<String, String>(0, null),
+			new LeafNode<String, String>(0, null)
 		};
 		AbstractNode<String, String> children31[] = ((InnerNode<String, String>) root3
 				.getChildren()[0]).getChildren();

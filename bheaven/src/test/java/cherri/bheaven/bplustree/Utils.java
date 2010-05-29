@@ -68,9 +68,10 @@ public class Utils {
 		
 		for (int i = slots - 1; i >= 0; i--) {
 			nodes[i] = new LeafNode<String, String>(
-					generateStrings(size * 2, slots * 2, value + i), 
 					size * 2, next);
 			generateStrings(nodes[i], slots * 2, key + i);
+			generateValueStrings((LeafNode<String, String>) nodes[i],
+					slots * 2, value + i);
 			next = nodes[i]; 
 		}
 		
@@ -98,4 +99,12 @@ public class Utils {
 		node.setSlots(slots);
 	}
 	
+	public static void generateValueStrings(LeafNode<String, String> node,
+			int slots, String prefix) {
+		
+		for (int i = 0; i < slots; i++) {
+			node.setValue(prefix + i, i);
+		}
+		
+	}
 }

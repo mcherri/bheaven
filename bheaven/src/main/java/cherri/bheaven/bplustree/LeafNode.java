@@ -27,28 +27,29 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	
 	/**
 	 * @param keys
-	 * @param values
-	 * @param slots
+	 * @param maxSlots
 	 * @param next
 	 */
-	public LeafNode(V[] values, int maxSlots, AbstractNode<K, V> next) {
+	@SuppressWarnings("unchecked")
+	public LeafNode(int maxSlots, AbstractNode<K, V> next) {
 		super(maxSlots);
-		this.values = values;
+
+		this.values = (V[]) new Object[maxSlots];
 		this.next = next;
 	}
 	
 	/**
-	 * @return the values
+	 * @return the value
 	 */
-	public V[] getValues() {
-		return values;
+	public V getValue(int index) {
+		return values[index];
 	}
 	
 	/**
-	 * @param values the values to set
+	 * @param value the value to set
 	 */
-	public void setValues(V[] values) {
-		this.values = values;
+	public void setValue(V value, int index) {
+		values[index] = value;
 	}
 
 	/**
@@ -67,19 +68,18 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	
 	
 	public void insert(K key, V value) {
-		V[] values = getValues();
 		
 		int index = getSlots() - 1;
 		
 		while (index >= 0 && key.compareTo(getKey(index)) < 0) {
 			setKey(getKey(index), index + 1);
-			values[index + 1] = values[index];
+			setValue(getValue(index), index + 1);
 
 			index--;
 		}
 		
 		setKey(key, index + 1);
-		values[index + 1] = value;
+		setValue(value, index + 1);
 		
 		setSlots(getSlots() + 1);
 	}
@@ -87,18 +87,14 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public LeafNode<K, V> split() {
 		checkIsFull();
 		
-		@SuppressWarnings("unchecked")
-		V values[] = (V[]) new Object[getValues().length];
-
-		return new LeafNode<K, V>(values, getMaxSlots(), next);
+		return new LeafNode<K, V>(getMaxSlots(), next);
 	}
 	
 	public void remove(int index) {
-		V[] values = getValues();
 		
 		for (int i = index; i < getSlots() - 1; i++) {
 			setKey(getKey(i + 1), i);
-			values[i] = values[i + 1];
+			setValue(getValue(i + 1), i);
 		}
 		
 		setSlots(getSlots() - 1);
@@ -127,7 +123,7 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public void leftShift(int count) {
 		for (int i = 0; i < getSlots() - count; i++) {
 			setKey(getKey(i + count), i);
-			getValues()[i] = getValues()[i + count]; 
+			setValue(getValue(i + count), i);
 		}
 	}
 
@@ -138,7 +134,7 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public void rightShift(int count) {
 		for (int i = getSlots() - 1; i >= 0 ; i--) {
 			setKey(getKey(i), i + count);
-			getValues()[i + count] = getValues()[i];
+			setValue(getValue(i), i + count);
 		}
 	}
 
@@ -149,8 +145,7 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public void copyToLeft(AbstractNode<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			node.setKey(getKey(i), node.getSlots() + i);
-			((LeafNode<K, V>) node).getValues()[node.getSlots() + i] =
-				getValues()[i];
+			((LeafNode<K, V>) node).setValue(getValue(i), node.getSlots() + i);
 		}
 	}
 
@@ -161,8 +156,7 @@ public class LeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
 	public void copyToRight(AbstractNode<K,V> node, int count) {
 		for (int i = 0; i < count; i++) {
 			node.setKey(getKey(getSlots() - count + i), i);
-			((LeafNode<K, V>) node).getValues()[i] =
-				getValues()[getSlots() - count + i];
+			((LeafNode<K, V>) node).setValue(getValue(getSlots() - count + i), i);
 		}
 	}
 

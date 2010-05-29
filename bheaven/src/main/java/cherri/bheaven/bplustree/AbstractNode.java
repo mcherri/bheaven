@@ -50,7 +50,7 @@ public abstract class AbstractNode<K extends Comparable<K>, V> /*implements Comp
 	 * @param key the key to set
 	 */
 	public void setKey(K key, int index) {
-		this.keys[index] = key;
+		keys[index] = key;
 	}
 	
 	public int getKeyIndex(K key) {

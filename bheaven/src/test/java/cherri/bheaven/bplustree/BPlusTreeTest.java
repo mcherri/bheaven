@@ -44,9 +44,9 @@ public class BPlusTreeTest {
 		tree1 = new BPlusTree<String, String>(4, 5);
 		
 		root1 = new LeafNode<String, String>(
-					Utils.generateStrings(10, 5, "va"), 
 					10, null);
 		Utils.generateStrings(root1, 5, "a");
+		Utils.generateValueStrings(root1, 5, "va");
 		
 		root2 = new InnerNode<String, String>(null, 3);
 		AbstractNode<String, String> children2[] =

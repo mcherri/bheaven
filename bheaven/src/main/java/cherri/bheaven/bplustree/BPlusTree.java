@@ -125,7 +125,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		int index = node.getKeyIndex(key);
 		
 		if(index >= 0) {
-			return node.getValues()[index];
+			return node.getValue(index);
 		} else {
 			return null;
 		}
@@ -134,7 +134,7 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 	@SuppressWarnings("unchecked")
 	public void put(K key, V value) {
 		if (root == null) {
-			root = new LeafNode<K, V>((V[]) new Object[records], records, null);
+			root = new LeafNode<K, V>(records, null);
 		}
 		
 		/*
@@ -259,11 +259,11 @@ public /*abstract*/ class BPlusTree<K extends Comparable<K>, V> /*implements Map
 		for (int i = 0; i < count; i++, right--) {
 			if(found || key.compareTo(node.getKey(left)) < 0) {
 				newLeafNode.setKey(node.getKey(left), right);
-				newLeafNode.getValues()[right] = node.getValues()[left];
+				newLeafNode.setValue(node.getValue(left), right);
 				left--;
 			} else {
 				newLeafNode.setKey(key, right);
-				newLeafNode.getValues()[right] = value;
+				newLeafNode.setValue(value, right);
 				found = true;
 			}
 		}
